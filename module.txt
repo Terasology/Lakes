@@ -1,0 +1,11 @@
+{
+    "id" : "PolyLakes",
+    "version" : "0.0.1-SNAPSHOT",
+    "author" : "Cpt. Crispy Crunchy",
+    "displayName" : "Poly Lakes",
+    "description" : "Plugin for Worldgenerator, which creates lakes based on random polygons",
+    "dependencies" :
+    [
+        {"id": "Core", "minVersion": "1.0.0"}
+    ]
+}
