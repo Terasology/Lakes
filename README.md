@@ -8,7 +8,7 @@ Current features:
 
 Known issues:  
 -Missing biome modification to prevent grass and trees to spawn on lakes  
-~~-surface lakes have difficulties appearing in perlin and other non flat world gens (unknown reason)~~
+~~-surface lakes have difficulties appearing in perlin and other non flat world gens (unknown reason)~~  
 -the "tubs" of surface lakes are sometimes incomplete  
 
 Future plans:  
