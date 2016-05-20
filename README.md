@@ -19,4 +19,8 @@ Future plans:
 -add an air layer for underground lakes above the watersurface
 
 ![sc1](/images/itssomething.jpg)
+![sc2](/images/pic1.jpg)
+![sc3](/images/pic2.jpg)
+![sc4](/images/pic3.jpg)
+
 
