@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.PolyLakes;
+package org.terasology.Lakes;
 
 import org.terasology.math.Region3i;
 import org.terasology.world.generation.Border3D;

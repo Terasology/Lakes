@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.PolyLakes;
+package org.terasology.Lakes;
 
-import org.terasology.math.geom.BaseVector2i;
 import org.terasology.math.Region3i;
-import org.terasology.math.geom.BaseVector3i;
 import org.terasology.math.geom.Rect2i;
+import org.terasology.math.geom.Vector2i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
@@ -29,7 +28,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Produces(LakeFacet.class)
-@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 28)))
+@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 54)))
 public class LakeProvider implements FacetProviderPlugin {
 
     private Noise noise;
@@ -54,9 +53,14 @@ public class LakeProvider implements FacetProviderPlugin {
             if( pos.y()<sHeight-20 && noise.noise(pos.x(), pos.y(), pos.z()) > 0.99995){
                 lakes.add(new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z())))));
             }
-            else if (pos.y()==sHeight && noise.noise(pos.x(), pos.y(), pos.z()) > 0.99/* && checkGradient(pos,surfaceHeightFacet)*/) {
-                lakes.add(new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z())))));
+
+            else if (pos.y()==Math.round(sHeight) && noise.noise(pos.x(), pos.y(), pos.z()) > 0.9995 && checkGradient(pos,surfaceHeightFacet)) {
+                Lake temp = new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z()))));
+                if( checkCorners(temp.getBB(), surfaceHeightFacet)){
+                    lakes.add(temp);
+                }
             }
+
 
         }
 
@@ -66,16 +70,38 @@ public class LakeProvider implements FacetProviderPlugin {
 
     private boolean checkGradient(Vector3i pos, BaseFieldFacet2D facet){
 
-        Rect2i BB = Rect2i.createFromMinAndMax(pos.x()-1,pos.z()-1,pos.x()+1,pos.z()+1);
+        Rect2i BB = Rect2i.createFromMinAndMax(pos.x()-3,pos.z()-3,pos.x()+3,pos.z()+3);
 
         if(facet.getWorldRegion().contains(BB)){
-            float xDiff = Math.abs(facet.getWorld(pos.x()+1,pos.z())-facet.getWorld(pos.x()-1,pos.z()));
-            float yDiff = Math.abs(facet.getWorld(pos.x(),pos.z()+1)-facet.getWorld(pos.x(),pos.z()-1));
-            float xyDiff = Math.abs(facet.getWorld(pos.x()+1,pos.z()+1)-facet.getWorld(pos.x()-1,pos.z()-1));
-            if(xDiff > 5 || yDiff > 5 || xyDiff > 5){
-                return true;
+            float xDiff = Math.abs(facet.getWorld(pos.x()+3,pos.z())-facet.getWorld(pos.x()-3,pos.z()));
+            float yDiff = Math.abs(facet.getWorld(pos.x(),pos.z()+3)-facet.getWorld(pos.x(),pos.z()-3));
+            float xyDiff = Math.abs(facet.getWorld(pos.x()+3,pos.z()+3)-facet.getWorld(pos.x()-3,pos.z()-3));
+            if(xDiff > 2 || yDiff > 2 || xyDiff > 2){
+                return false;
             }
             else return true;
+        }
+
+        return false;
+    }
+
+    private boolean checkCorners(Rect2i BB, BaseFieldFacet2D facet){
+        Vector2i max = BB.max();
+        Vector2i min = BB.min();
+        if(facet.getWorldRegion().contains(BB)){
+            float[] corners = new float[4];
+            corners[0] = facet.getWorld(max);
+            corners[1] = facet.getWorld(min);
+            corners[2] = facet.getWorld(min.x()+BB.sizeX(),min.y());
+            corners[3] = facet.getWorld(min.x(),min.y()+BB.sizeY());
+            for(int i = 0 ;i< corners.length;i++){
+                for(int j = 0; j < corners.length; j++){
+                    if(Math.abs(corners[i]-corners[j])>4){
+                        return false;
+                    }
+                }
+            }
+
         }
 
         return true;

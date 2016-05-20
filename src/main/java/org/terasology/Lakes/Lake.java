@@ -13,29 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.PolyLakes;
+package org.terasology.Lakes;
 
-import java.lang.Math;
-import java.awt.Polygon;
+import org.terasology.math.geom.Rect2i;
+import org.terasology.math.geom.Vector2f;
 import org.terasology.math.geom.Vector3i;
-import org.terasology.math.TeraMath;
-import org.terasology.utilities.procedural.WhiteNoise;
+import org.terasology.utilities.procedural.SimplexNoise;
+import org.terasology.utilities.procedural.SubSampledNoise;
+
+import java.awt.Polygon;
+import java.awt.*;
 
 public class Lake {
 
     private Vector3i origin;
-    private float maxLength = 7;
+    private float maxLength = 6;
     private float maxLengthOuter = 2;
-    private float maxRadius = 18;
+    private float maxRadius = 17;
     private int WaterHeight;
     private Polygon LakePoly;
     private Polygon OuterPoly;
-    private WhiteNoise noise;
+    private SubSampledNoise noise;
 
     public Lake(Vector3i origin, int pnum){
-        noise = new WhiteNoise(Math.round(origin.length()*217645199));
+        long seed = Math.round(origin.length()*217645199);
+        //noise = new WhiteNoise(Math.round(origin.length()*217645199));
+
+        noise = new SubSampledNoise(new SimplexNoise(seed/4), new Vector2f(0.002f, 0.002f), 1);
         this.origin=origin;
-        WaterHeight = origin.getY();
+        WaterHeight = origin.y();
         createEllipticPolygon(pnum);
     }
 
@@ -50,14 +56,14 @@ public class Lake {
         double alpha;
         float yRadius, xRadius, length, outerlength;
 
-        xRadius =  Math.abs(noise.noise(origin.x())*maxRadius);
-        yRadius = Math.abs(noise.noise(origin.z())*maxRadius);
+        xRadius =  Math.abs(noise.noise(origin.x(),origin.y())*maxRadius);
+        yRadius = Math.abs(noise.noise(origin.z(),origin.y())*maxRadius);
 
         for(int i=0; i<pnum; i++){
             alpha = i * 2 * Math.PI / pnum;
 
-            length = Math.abs(noise.noise(origin.y()*i)*maxLength);
-            outerlength = Math.abs(noise.noise(origin.y()*i*2)*maxLengthOuter);
+            length = Math.abs(noise.noise(origin.y()*i,origin.x()*i)*maxLength);
+            outerlength = Math.abs(noise.noise(origin.y()*i*2,origin.x()*i*2)*maxLengthOuter);
 
             //Lake Polygon points:
             x[i] = origin.x()+Math.round(xRadius*(float)Math.cos((double) alpha));
@@ -89,6 +95,14 @@ public class Lake {
 
     public boolean BBContains(Vector3i pos){
         return OuterPoly.getBounds().contains(pos.getX(),pos.getZ());
+    }
+
+    public Rect2i getBB() {
+        Rectangle AwtRect = OuterPoly.getBounds();
+        Rect2i TeraRect = Rect2i.createFromMinAndMax(Math.round((float) AwtRect.getMinX()),
+                Math.round((float) AwtRect.getMinY()), Math.round((float) AwtRect.getMaxX()),
+                Math.round((float) AwtRect.getMaxY()));
+        return TeraRect;
     }
 
     public Vector3i getOrigin(){

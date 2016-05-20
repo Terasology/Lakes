@@ -13,29 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.PolyLakes;
+package org.terasology.Lakes;
 
 import org.terasology.math.ChunkMath;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.registry.CoreRegistry;
-import org.terasology.world.generator.plugin.RegisterPlugin;
 import org.terasology.world.block.Block;
 import org.terasology.world.block.BlockManager;
 import org.terasology.world.chunks.CoreChunk;
 import org.terasology.world.generation.Region;
 import org.terasology.world.generation.WorldRasterizerPlugin;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
+import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 public class LakeRasterizer implements WorldRasterizerPlugin {
 
     private Block sand;
-    private Block water;
+    private Block water,test;
 
     @Override
     public void initialize() {
         water = CoreRegistry.get(BlockManager.class).getBlock("Core:Water");
         sand = CoreRegistry.get(BlockManager.class).getBlock("Core:Sand");
+        test = CoreRegistry.get(BlockManager.class).getBlock("Core:Stone");
     }
 
     @Override
@@ -46,7 +47,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
 
         for (Vector3i position : chunkRegion.getRegion()) {
             Lake lake = lakeFacet.getNearestLake(position);
-            //chunk.setBlock(ChunkMath.calcBlockPos(lake.getOrigin()), water);
+            //chunk.setBlock(ChunkMath.calcBlockPos(lake.getOrigin()), test);
             if(lake.BBContains(position)) {
                 float surfaceHeight = surfaceHeightFacet.getWorld(position.x(), position.z());
                 float lakeDepth = lakeDepthFacet.getWorld(position.x(), position.z());

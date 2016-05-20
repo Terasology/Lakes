@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.PolyLakes;
+package org.terasology.Lakes;
 
-import java.lang.Math;
 import org.terasology.math.geom.Vector2f;
 import org.terasology.utilities.procedural.WhiteNoise;
 
