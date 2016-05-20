@@ -15,8 +15,8 @@ Future plans:
 -join adjacent surface lakes together to one waterheight
 -add lake biome
 -base lake probability  
--add additional probability for lakes to spawn in caves
--add an air layer for underground lakes above the watersurface
+-add additional probability for lakes to spawn in caves  
+~~-add an air layer for underground lakes above the watersurface~~  
 
 ![sc1](/images/itssomething.jpg)
 ![sc2](/images/pic1.jpg)
