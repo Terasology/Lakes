@@ -30,18 +30,19 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 public class LakeRasterizer implements WorldRasterizerPlugin {
 
     private Block sand;
-    private Block water,test;
+    private Block water,air;
 
     @Override
     public void initialize() {
         water = CoreRegistry.get(BlockManager.class).getBlock("Core:Water");
         sand = CoreRegistry.get(BlockManager.class).getBlock("Core:Sand");
-        test = CoreRegistry.get(BlockManager.class).getBlock("Core:Stone");
+        air = CoreRegistry.get(BlockManager.class).getBlock("Engine:Air");
     }
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
         LakeDepthFacet lakeDepthFacet = chunkRegion.getFacet(LakeDepthFacet.class);
+        LakeHeightFacet lakeHeightFacet = chunkRegion.getFacet(LakeHeightFacet.class);
         LakeFacet lakeFacet = chunkRegion.getFacet(LakeFacet.class);
         SurfaceHeightFacet surfaceHeightFacet = chunkRegion.getFacet(SurfaceHeightFacet.class);
 
@@ -51,14 +52,18 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
             if(lake.BBContains(position)) {
                 float surfaceHeight = surfaceHeightFacet.getWorld(position.x(), position.z());
                 float lakeDepth = lakeDepthFacet.getWorld(position.x(), position.z());
-
+                float lakeHeight = lakeHeightFacet.getWorld(position.x(), position.z());
                 if (lake.LakeContains(position) && position.y() <= lake.getWaterHeight() && (position.y() >= lake.getWaterHeight() - lakeDepth ||
                     position.y() > surfaceHeight)) {
                     chunk.setBlock(ChunkMath.calcBlockPos(position), water);
                 }
 
-                if (lake.OuterContains(position) && position.y() <= lake.getWaterHeight() && position.y() >= surfaceHeight) {
+               else if (lake.OuterContains(position) && position.y() <= lake.getWaterHeight() && position.y() >= surfaceHeight) {
                     chunk.setBlock(ChunkMath.calcBlockPos(position), sand);
+                }
+
+                else if (lake.LakeContains(position) && position.y() > lake.getWaterHeight() && position.y() <= lake.getWaterHeight() + lakeHeight) {
+                    chunk.setBlock(ChunkMath.calcBlockPos(position), air);
                 }
             }
         }

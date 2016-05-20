@@ -54,9 +54,13 @@ public class LakeProvider implements FacetProviderPlugin {
                 lakes.add(new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z())))));
             }
 
-            else if (pos.y()==Math.round(sHeight) && noise.noise(pos.x(), pos.y(), pos.z()) > 0.9995 && checkGradient(pos,surfaceHeightFacet)) {
+            else if (pos.y()==Math.round(sHeight) && noise.noise(pos.x(), pos.y(), pos.z()) > 0.9993 && checkGradient(pos,surfaceHeightFacet)) {
                 Lake temp = new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z()))));
                 if( checkCorners(temp.getBB(), surfaceHeightFacet)){
+                    int minHeight= getMinimumHeight(temp.getBB(), surfaceHeightFacet);
+                    if(minHeight < pos.y()){
+                        temp.setWaterHeight(minHeight);
+                    }
                     lakes.add(temp);
                 }
             }
@@ -94,7 +98,7 @@ public class LakeProvider implements FacetProviderPlugin {
             corners[1] = facet.getWorld(min);
             corners[2] = facet.getWorld(min.x()+BB.sizeX(),min.y());
             corners[3] = facet.getWorld(min.x(),min.y()+BB.sizeY());
-            for(int i = 0 ;i< corners.length;i++){
+            for(int i = 0 ;i < corners.length;i++){
                 for(int j = 0; j < corners.length; j++){
                     if(Math.abs(corners[i]-corners[j])>4){
                         return false;
@@ -103,7 +107,26 @@ public class LakeProvider implements FacetProviderPlugin {
             }
 
         }
-
         return true;
+    }
+
+    private int getMinimumHeight(Rect2i BB, BaseFieldFacet2D facet){
+
+        Vector2i max = BB.max();
+        Vector2i min = BB.min();
+        int minHeight = 9999;
+        if(facet.getWorldRegion().contains(BB)){
+            float[] corners = new float[4];
+            corners[0] = facet.getWorld(max);
+            corners[1] = facet.getWorld(min);
+            corners[2] = facet.getWorld(min.x()+BB.sizeX(),min.y());
+            corners[3] = facet.getWorld(min.x(),min.y()+BB.sizeY());
+            for(int i = 0 ;i< corners.length;i++){
+                if(corners[i]<minHeight){
+                    minHeight = Math.round(corners[i]);
+                }
+            }
+        }
+        return minHeight;
     }
 }

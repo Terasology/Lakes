@@ -28,8 +28,8 @@ import org.terasology.world.generation.Produces;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
-@Produces(LakeDepthFacet.class)
-public class LakeDepthProvider implements FacetProviderPlugin {
+@Produces(LakeHeightFacet.class)
+public class LakeHeightProvider implements FacetProviderPlugin {
 
     private SubSampledNoise surfaceNoise1;
     private SubSampledNoise surfaceNoise2;
@@ -37,16 +37,16 @@ public class LakeDepthProvider implements FacetProviderPlugin {
 
     @Override
     public void setSeed(long seed) {
-        surfaceNoise1 = new SubSampledNoise(new SimplexNoise(seed/2), new Vector2f(0.02f, 0.02f), 1);
-        surfaceNoise2 = new SubSampledNoise(new BrownianNoise(new SimplexNoise(seed/8), 8), new Vector2f(0.005f, 0.005f), 1);
+        surfaceNoise1 = new SubSampledNoise(new SimplexNoise(seed/2), new Vector2f(0.05f, 0.05f), 1);
+        surfaceNoise2 = new SubSampledNoise(new BrownianNoise(new SimplexNoise(seed/8), 8), new Vector2f(0.05f, 0.05f), 1);
         surfaceNoise3 = new SubSampledNoise(new SimplexNoise(seed/4), new Vector2f(0.002f, 0.002f), 1);
     }
 
     @Override
     public void process(GeneratingRegion region) {
 
-        Border3D border = region.getBorderForFacet(LakeDepthFacet.class);
-        LakeDepthFacet facet = new LakeDepthFacet(region.getRegion(), border);
+        Border3D border = region.getBorderForFacet(LakeHeightFacet.class);
+        LakeHeightFacet facet = new LakeHeightFacet(region.getRegion(), border);
         Rect2i processRegion = facet.getWorldRegion();
 
         float[] sNoise1Values = surfaceNoise1.noise(processRegion);
@@ -63,6 +63,6 @@ public class LakeDepthProvider implements FacetProviderPlugin {
 
         }
 
-        region.setRegionFacet(LakeDepthFacet.class, facet);
+        region.setRegionFacet(LakeHeightFacet.class, facet);
     }
 }
