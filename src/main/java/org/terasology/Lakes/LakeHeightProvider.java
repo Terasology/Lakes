@@ -59,7 +59,7 @@ public class LakeHeightProvider implements FacetProviderPlugin {
             float noiseValue2 = sNoise2Values[facet.getWorldIndex(position)];
             float noiseValue3 = sNoise3Values[facet.getWorldIndex(position)];
 
-            facet.setWorld(position, 4*Math.abs(noiseValue1+noiseValue2+noiseValue3));
+            facet.setWorld(position, 1+4*Math.abs(noiseValue1+noiseValue2+noiseValue3));
 
         }
 

@@ -28,7 +28,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Produces(LakeFacet.class)
-@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 54)))
+@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 30)))
 public class LakeProvider implements FacetProviderPlugin {
 
     private Noise noise;
@@ -44,17 +44,17 @@ public class LakeProvider implements FacetProviderPlugin {
 
         Border3D border = region.getBorderForFacet(LakeFacet.class);
         //Extend border by max radius + max length + max outer length and max lakedepth
-        border = border.extendBy(11,12,27);
+        border = border.extendBy(11,12,15);
         LakeFacet lakes = new LakeFacet(region.getRegion(), border);
         Region3i worldRegion = lakes.getWorldRegion();
         for (Vector3i pos : worldRegion) {
             float sHeight = surfaceHeightFacet.getWorld(pos.x(),pos.z());
-
-            if( pos.y()<sHeight-20 && noise.noise(pos.x(), pos.y(), pos.z()) > 0.99995){
+            float noiseValue = noise.noise(pos.x(),pos.y(),pos.z());
+            if( pos.y()<sHeight-20 && noiseValue > 0.99998){
                 lakes.add(new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z())))));
             }
 
-            else if (pos.y()==Math.round(sHeight) && noise.noise(pos.x(), pos.y(), pos.z()) > 0.9993 && checkGradient(pos,surfaceHeightFacet)) {
+            else if (pos.y()==Math.round(sHeight) && noiseValue > 0.9993 && checkGradient(pos,surfaceHeightFacet)) {
                 Lake temp = new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z()))));
                 if( checkCorners(temp.getBB(), surfaceHeightFacet)){
                     int minHeight= getMinimumHeight(temp.getBB(), surfaceHeightFacet);
@@ -72,7 +72,7 @@ public class LakeProvider implements FacetProviderPlugin {
         region.setRegionFacet(LakeFacet.class, lakes);
     }
 
-    private boolean checkGradient(Vector3i pos, BaseFieldFacet2D facet){
+    protected boolean checkGradient(Vector3i pos, BaseFieldFacet2D facet){
 
         Rect2i BB = Rect2i.createFromMinAndMax(pos.x()-3,pos.z()-3,pos.x()+3,pos.z()+3);
 
@@ -89,7 +89,7 @@ public class LakeProvider implements FacetProviderPlugin {
         return false;
     }
 
-    private boolean checkCorners(Rect2i BB, BaseFieldFacet2D facet){
+    protected boolean checkCorners(Rect2i BB, BaseFieldFacet2D facet){
         Vector2i max = BB.max();
         Vector2i min = BB.min();
         if(facet.getWorldRegion().contains(BB)){
@@ -110,7 +110,7 @@ public class LakeProvider implements FacetProviderPlugin {
         return true;
     }
 
-    private int getMinimumHeight(Rect2i BB, BaseFieldFacet2D facet){
+    protected int getMinimumHeight(Rect2i BB, BaseFieldFacet2D facet){
 
         Vector2i max = BB.max();
         Vector2i min = BB.min();

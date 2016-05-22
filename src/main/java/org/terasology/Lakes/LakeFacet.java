@@ -16,6 +16,7 @@
 package org.terasology.Lakes;
 
 import org.terasology.math.Region3i;
+import org.terasology.math.geom.BaseVector3i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.facets.base.BaseFacet3D;
@@ -24,12 +25,12 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/**
- * Copied from https://github.com/Terasology/Cities/blob/develop/src/main/java/org/terasology/cities/lakes/LakeFacet.java
- */
+
 public class LakeFacet extends BaseFacet3D {
 
-    private Set<Lake> lakes = new LinkedHashSet<>();
+    protected Set<Lake> lakes = new LinkedHashSet<>();
+    protected boolean enabled = true;
+    protected Lake NullLake = new Lake();
 
     public LakeFacet(Region3i targetRegion, Border3D border) {
         super(targetRegion, border);
@@ -52,7 +53,7 @@ public class LakeFacet extends BaseFacet3D {
     public Lake getNearestLake(Vector3i pos){
 
         if(lakes.isEmpty()){
-            return new Lake(new Vector3i(-9999,-9999,-9999), 0);
+            return NullLake;
         }
 
         Lake nearest = (Lake) lakes.toArray()[0];
@@ -69,4 +70,12 @@ public class LakeFacet extends BaseFacet3D {
 
         return nearest;
     }
+
+    public int getWorldIndex(BaseVector3i pos) {
+        return getWorldIndex(pos.x(), pos.y(),pos.z());
+    }
+
+    public boolean isEnabled() { return enabled; }
+
+    public void setEnabled( boolean enabled ){ this.enabled = enabled; }
 }

@@ -16,33 +16,39 @@
 package org.terasology.Lakes;
 
 import org.terasology.math.geom.Rect2i;
-import org.terasology.math.geom.Vector2f;
 import org.terasology.math.geom.Vector3i;
-import org.terasology.utilities.procedural.SimplexNoise;
-import org.terasology.utilities.procedural.SubSampledNoise;
+import org.terasology.utilities.procedural.Noise;
+import org.terasology.utilities.procedural.WhiteNoise;
 
-import java.awt.Polygon;
 import java.awt.*;
 
 public class Lake {
 
     private Vector3i origin;
-    private float maxLength = 6;
+    private float maxLength = 2;
     private float maxLengthOuter = 2;
-    private float maxRadius = 17;
+    private float maxRadius = 11;
+    private float maxDepth = 12;
     private int WaterHeight;
     private Polygon LakePoly;
     private Polygon OuterPoly;
-    private SubSampledNoise noise;
+    private Noise noise;
+    private int points;
 
     public Lake(Vector3i origin, int pnum){
         long seed = Math.round(origin.length()*217645199);
         //noise = new WhiteNoise(Math.round(origin.length()*217645199));
 
-        noise = new SubSampledNoise(new SimplexNoise(seed/4), new Vector2f(0.002f, 0.002f), 1);
+        noise = new WhiteNoise(seed);
         this.origin=origin;
         WaterHeight = origin.y();
         createEllipticPolygon(pnum);
+        points = pnum;
+    }
+
+    //Null Lake
+    public Lake (){
+        points = 0;
     }
 
     private void createEllipticPolygon(int pnum){
@@ -112,6 +118,21 @@ public class Lake {
     public int getWaterHeight() { return WaterHeight; }
 
     public void setWaterHeight( int WaterHeight ) { this.WaterHeight = WaterHeight; }
+
+    public boolean isNull() {
+
+        if (points == 0) {
+            return true;
+        }
+        else return false;
+    }
+
+    public boolean isInRange(Vector3i pos ) {
+        if(origin == null){ return false; }
+        return Math.abs(pos.x()-origin.x())<=maxRadius && Math.abs(pos.z()-origin.z())<=maxRadius
+                && Math.abs(pos.x()-origin.x())<=maxDepth;
+    }
+
 }
 
 
