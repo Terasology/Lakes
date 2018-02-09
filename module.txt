@@ -1,11 +1,10 @@
 {
     "id" : "Lakes",
-    "version" : "0.0.1-SNAPSHOT",
+    "version" : "0.0.2-SNAPSHOT",
     "author" : "Cpt. Crispy Crunchy",
     "displayName" : "Lakes",
     "description" : "Plugin for Worldgenerator, which creates lakes based on random polygons",
-    "dependencies" :
-    [
-        {"id": "Core", "minVersion": "1.0.0"}
+    "dependencies" : [
+        {"id": "Core", "minVersion": "2.0.0"}
     ]
 }
