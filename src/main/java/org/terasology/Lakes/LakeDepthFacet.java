@@ -20,6 +20,9 @@ import org.terasology.math.geom.BaseVector2i;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
+/**
+ * Marks how deep a lake would be were there some in a particular world xz coordinates.
+ */
 public class LakeDepthFacet extends SurfaceHeightFacet {
 
     public LakeDepthFacet(Region3i targetRegion, Border3D border) {

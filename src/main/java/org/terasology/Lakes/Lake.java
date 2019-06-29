@@ -115,16 +115,16 @@ public class Lake {
         return origin;
     }
 
+    /**
+     * Returns the y position of the surface od the lake.
+     * @return Y of lake surface in world coordinates
+     */
     public int getWaterHeight() { return waterHeight; }
 
     public void setWaterHeight( int waterHeight ) { this.waterHeight = waterHeight; }
 
-    public boolean isNull() {
-
-        if (points == 0) {
-            return true;
-        }
-        else return false;
+    public boolean isNotNull() {
+        return points != 0;
     }
 
     public boolean isInRange(Vector3i pos ) {

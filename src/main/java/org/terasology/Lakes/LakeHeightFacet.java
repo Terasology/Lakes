@@ -19,8 +19,12 @@ import org.terasology.math.Region3i;
 import org.terasology.math.geom.BaseVector2i;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
+import org.terasology.world.generation.facets.base.BaseFieldFacet2D;
 
-public class LakeHeightFacet extends SurfaceHeightFacet {
+/**
+ * Marks the amount of empty space, e.g. air blocks, there will be over lake surface should there be some in the particular xz coordinates.
+ */
+public class LakeHeightFacet extends BaseFieldFacet2D {
 
     public LakeHeightFacet(Region3i targetRegion, Border3D border) {
         super(targetRegion, border);
