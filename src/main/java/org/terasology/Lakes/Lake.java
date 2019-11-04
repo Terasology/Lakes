@@ -116,7 +116,7 @@ public class Lake {
     }
 
     /**
-     * Returns the y position of the surface od the lake.
+     * Returns the y position of the lake surface.
      * @return Y of lake surface in world coordinates
      */
     public int getWaterHeight() { return waterHeight; }

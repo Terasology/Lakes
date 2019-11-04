@@ -21,7 +21,9 @@ import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
 /**
- * Marks how deep a lake would be were there some in a particular world xz coordinates.
+ * Marks how deep a lake would be at given world coordinates (x, z).
+ *
+ * The lake depth is given as positive floating point value which should be interpreted as depth from actual surface height.
  */
 public class LakeDepthFacet extends SurfaceHeightFacet {
 
