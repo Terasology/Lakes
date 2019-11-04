@@ -58,10 +58,10 @@ public class LakeFacet extends BaseFacet3D {
 
         Lake nearest = (Lake) lakes.toArray()[0];
 
-        double dis=9999;
+        double dis = Double.MAX_VALUE;
 
         for(Lake lake : lakes){
-            double newDis =  pos.distance(lake.getOrigin());
+            double newDis =  pos.distanceSquared(lake.getOrigin());
             if(dis > newDis){
                 nearest = lake;
                 dis=newDis;
@@ -69,10 +69,6 @@ public class LakeFacet extends BaseFacet3D {
         }
 
         return nearest;
-    }
-
-    public int getWorldIndex(BaseVector3i pos) {
-        return getWorldIndex(pos.x(), pos.y(),pos.z());
     }
 
     public boolean isEnabled() { return enabled; }

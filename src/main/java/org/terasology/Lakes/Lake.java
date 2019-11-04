@@ -29,9 +29,9 @@ public class Lake {
     private float maxLengthOuter = 2;
     private float maxRadius = 11;
     private float maxDepth = 12;
-    private int WaterHeight;
-    private Polygon LakePoly;
-    private Polygon OuterPoly;
+    private int waterHeight;
+    private Polygon lakePoly;
+    private Polygon outerPoly;
     private Noise noise;
     private int points;
 
@@ -41,7 +41,7 @@ public class Lake {
 
         noise = new WhiteNoise(seed);
         this.origin=origin;
-        WaterHeight = origin.y();
+        waterHeight = origin.y();
         createEllipticPolygon(pnum);
         points = pnum;
     }
@@ -86,25 +86,25 @@ public class Lake {
         }
 
 
-        LakePoly = new Polygon(x,y,pnum);
-        OuterPoly = new Polygon(xOuter, yOuter, pnum);
+        lakePoly = new Polygon(x,y,pnum);
+        outerPoly = new Polygon(xOuter, yOuter, pnum);
 
     }
 
     public boolean LakeContains(Vector3i pos){
-        return LakePoly.contains(pos.getX(),pos.getZ());
+        return lakePoly.contains(pos.getX(),pos.getZ());
     }
 
     public boolean OuterContains(Vector3i pos){
-        return !LakePoly.contains(pos.getX(),pos.getZ()) && OuterPoly.contains(pos.getX(),pos.getZ());
+        return !lakePoly.contains(pos.getX(),pos.getZ()) && outerPoly.contains(pos.getX(),pos.getZ());
     }
 
     public boolean BBContains(Vector3i pos){
-        return OuterPoly.getBounds().contains(pos.getX(),pos.getZ());
+        return outerPoly.getBounds().contains(pos.getX(),pos.getZ());
     }
 
     public Rect2i getBB() {
-        Rectangle AwtRect = OuterPoly.getBounds();
+        Rectangle AwtRect = outerPoly.getBounds();
         Rect2i TeraRect = Rect2i.createFromMinAndMax(Math.round((float) AwtRect.getMinX()),
                 Math.round((float) AwtRect.getMinY()), Math.round((float) AwtRect.getMaxX()),
                 Math.round((float) AwtRect.getMaxY()));
@@ -115,16 +115,16 @@ public class Lake {
         return origin;
     }
 
-    public int getWaterHeight() { return WaterHeight; }
+    /**
+     * Returns the y position of the lake surface.
+     * @return Y of lake surface in world coordinates
+     */
+    public int getWaterHeight() { return waterHeight; }
 
-    public void setWaterHeight( int WaterHeight ) { this.WaterHeight = WaterHeight; }
+    public void setWaterHeight( int waterHeight ) { this.waterHeight = waterHeight; }
 
-    public boolean isNull() {
-
-        if (points == 0) {
-            return true;
-        }
-        else return false;
+    public boolean isNotNull() {
+        return points != 0;
     }
 
     public boolean isInRange(Vector3i pos ) {

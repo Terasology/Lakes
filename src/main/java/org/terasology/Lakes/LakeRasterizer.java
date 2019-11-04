@@ -58,7 +58,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
             Lake lake = lakeFacet.getNearestLake(position);
             Lake lavaLake = lavaFacet.getNearestLake(position);
 
-            if(!lake.isNull() && lake.isInRange(position) ) {
+            if(lake.isNotNull() && lake.isInRange(position) ) {
 
                 float surfaceHeight = surfaceHeightFacet.getWorld(position.x(), position.z());
                 float lakeDepth = lakeDepthFacet.getWorld(position.x(), position.z());
@@ -78,7 +78,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
                 }
             }
 
-            if(lavaFacet.isEnabled() && !lavaLake.isNull() && lake.isInRange(position)) {
+            if(lavaFacet.isEnabled() && lavaLake.isNotNull() && lake.isInRange(position)) {
 
                 float surfaceHeight = surfaceHeightFacet.getWorld(position.x(), position.z());
                 float lakeDepth = lakeDepthFacet.getWorld(position.x(), position.z());

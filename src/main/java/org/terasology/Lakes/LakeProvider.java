@@ -44,28 +44,24 @@ public class LakeProvider implements FacetProviderPlugin {
 
         Border3D border = region.getBorderForFacet(LakeFacet.class);
         //Extend border by max radius + max length + max outer length and max lakedepth
-        border = border.extendBy(11,12,15);
+        border = border.extendBy(11, 12, 15);
         LakeFacet lakes = new LakeFacet(region.getRegion(), border);
         Region3i worldRegion = lakes.getWorldRegion();
         for (Vector3i pos : worldRegion) {
-            float sHeight = surfaceHeightFacet.getWorld(pos.x(),pos.z());
-            float noiseValue = noise.noise(pos.x(),pos.y(),pos.z());
-            if( pos.y()<sHeight-20 && noiseValue > 0.99998){
-                lakes.add(new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z())))));
-            }
-
-            else if (pos.y()==Math.round(sHeight) && noiseValue > 0.9993 && checkGradient(pos,surfaceHeightFacet)) {
-                Lake temp = new Lake(pos, 10+20*Math.abs(Math.round(noise.noise(pos.x(),pos.z()))));
-                if( checkCorners(temp.getBB(), surfaceHeightFacet)){
-                    int minHeight= getMinimumHeight(temp.getBB(), surfaceHeightFacet);
-                    if(minHeight < pos.y()){
+            float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
+            float noiseValue = noise.noise(pos.x(), pos.y(), pos.z());
+            if (pos.y() < sHeight - 20 && noiseValue > 0.99998) {
+                lakes.add(new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z())))));
+            } else if (pos.y() == Math.round(sHeight) && noiseValue > 0.9993 && checkGradient(pos, surfaceHeightFacet)) {
+                Lake temp = new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z()))));
+                if (checkCorners(temp.getBB(), surfaceHeightFacet)) {
+                    int minHeight = getMinimumHeight(temp.getBB(), surfaceHeightFacet);
+                    if (minHeight < pos.y()) {
                         temp.setWaterHeight(minHeight);
                     }
                     lakes.add(temp);
                 }
             }
-
-
         }
 
 
@@ -110,21 +106,19 @@ public class LakeProvider implements FacetProviderPlugin {
         return true;
     }
 
-    protected int getMinimumHeight(Rect2i BB, BaseFieldFacet2D facet){
-
-        Vector2i max = BB.max();
-        Vector2i min = BB.min();
-        int minHeight = 9999;
-        if(facet.getWorldRegion().contains(BB)){
-            float[] corners = new float[4];
-            corners[0] = facet.getWorld(max);
-            corners[1] = facet.getWorld(min);
-            corners[2] = facet.getWorld(min.x()+BB.sizeX(),min.y());
-            corners[3] = facet.getWorld(min.x(),min.y()+BB.sizeY());
-            for(int i = 0 ;i< corners.length;i++){
-                if(corners[i]<minHeight){
-                    minHeight = Math.round(corners[i]);
-                }
+    protected int getMinimumHeight(Rect2i boundingBox, BaseFieldFacet2D facet){
+        boundingBox = facet.getWorldRegion().intersect(boundingBox);
+        Vector2i max = boundingBox.max();
+        Vector2i min = boundingBox.min();
+        int minHeight = Integer.MAX_VALUE;
+        float[] corners = new float[4];
+        corners[0] = facet.getWorld(max);
+        corners[1] = facet.getWorld(min);
+        corners[2] = facet.getWorld(max.x(),min.y());
+        corners[3] = facet.getWorld(min.x(),max.y());
+        for (float corner : corners) {
+            if (corner < minHeight) {
+                minHeight = Math.round(corner);
             }
         }
         return minHeight;
