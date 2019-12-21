@@ -134,7 +134,7 @@ public class LakeProvider implements FacetProviderPlugin, ConfigurableFacetProvi
     }
 
     @Override
-    public String getConfigurationName() { return "Lakes"; }
+    public String getConfigurationName() { return "Water Lakes"; }
 
     @Override
     public Component getConfiguration() { return configuration; }
@@ -145,7 +145,7 @@ public class LakeProvider implements FacetProviderPlugin, ConfigurableFacetProvi
     }
 
     private static class LakeFacetProviderConfiguration implements Component {
-        @Checkbox(description = "Enable Lakes")
+        @Checkbox(description = "Enable Water Lakes")
         public boolean enabled = true;
     }
 }
