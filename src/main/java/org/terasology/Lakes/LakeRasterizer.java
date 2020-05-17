@@ -37,10 +37,10 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void initialize() {
-        water = CoreRegistry.get(BlockManager.class).getBlock("CoreBlocks:Water");
-        lava = CoreRegistry.get(BlockManager.class).getBlock("CoreBlocks:Lava");
-        sand = CoreRegistry.get(BlockManager.class).getBlock("CoreBlocks:Sand");
-        stone = CoreRegistry.get(BlockManager.class).getBlock("CoreBlocks:Stone");
+        water = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Water");
+        lava = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Lava");
+        sand = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Sand");
+        stone = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
         air = CoreRegistry.get(BlockManager.class).getBlock("Engine:Air");
     }
 
