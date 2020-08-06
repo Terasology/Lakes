@@ -1,11 +1,13 @@
 {
     "id": "Lakes",
     "version": "1.0.0",
-    "author": "Cpt. Crispy Crunchy",
+    "author": "Cpt. Crispy Crunchy, sin3point14",
     "displayName": "Lakes",
     "description": "Plugin for Worldgenerator, which creates lakes based on random polygons",
     "dependencies": [
-        { "id": "CoreAssets", "minVersion": "2.0.1" }
+        { "id": "CoreAssets", "minVersion": "2.0.1" },
+        { "id": "CoreWorlds", "minVersion": "1.1.0" },
+        { "id": "BiomesAPI", "minVersion": "4.0.0" }
     ],
     "isWorld": true
 }

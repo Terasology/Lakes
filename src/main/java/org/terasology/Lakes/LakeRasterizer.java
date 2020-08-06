@@ -66,15 +66,15 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
 
                 if (lake.LakeContains(position) && position.y() <= lake.getWaterHeight() && (position.y() >= lake.getWaterHeight() - lakeDepth ||
                     position.y() > surfaceHeight)) {
-                    chunk.setBlock(ChunkMath.calcBlockPos(position), water);
+                    chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), water);
                 }
 
                else if (lake.OuterContains(position) && position.y() <= lake.getWaterHeight() && position.y() >= surfaceHeight) {
-                    chunk.setBlock(ChunkMath.calcBlockPos(position), sand);
+                    chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), sand);
                 }
 
                 else if (lake.LakeContains(position) && position.y() > lake.getWaterHeight() && position.y() <= lake.getWaterHeight() + lakeHeight) {
-                    chunk.setBlock(ChunkMath.calcBlockPos(position), air);
+                    chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), air);
                 }
             }
 

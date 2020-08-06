@@ -23,35 +23,36 @@ import org.terasology.utilities.procedural.WhiteNoise;
 import java.awt.*;
 
 public class Lake {
+    public static final int MAX_LENGTH = 10;
+    public static final int MAX_LENGTH_OUTER = MAX_LENGTH + 8;
+    public static final int MAX_RADIUS = 20;
+    public static final int MAX_SIZE = MAX_RADIUS + MAX_LENGTH + MAX_LENGTH_OUTER;
+    public static final int MAX_DEPTH = 12;
 
     private Vector3i origin;
-    private float maxLength = 2;
-    private float maxLengthOuter = 2;
-    private float maxRadius = 11;
-    private float maxDepth = 12;
     private int waterHeight;
     private Polygon lakePoly;
     private Polygon outerPoly;
     private Noise noise;
     private int points;
 
-    public Lake(Vector3i origin, int pnum){
-        long seed = Math.round(origin.length()*217645199);
+    public Lake(Vector3i origin, int pnum) {
+        long seed = Math.round(origin.length() * 217645199);
         //noise = new WhiteNoise(Math.round(origin.length()*217645199));
 
         noise = new WhiteNoise(seed);
-        this.origin=origin;
+        this.origin = origin;
         waterHeight = origin.y();
         createEllipticPolygon(pnum);
         points = pnum;
     }
 
     //Null Lake
-    public Lake (){
+    public Lake() {
         points = 0;
     }
 
-    private void createEllipticPolygon(int pnum){
+    private void createEllipticPolygon(int pnum) {
 
 
         int[] x = new int[pnum];
@@ -62,45 +63,45 @@ public class Lake {
         double alpha;
         float yRadius, xRadius, length, outerlength;
 
-        xRadius =  Math.abs(noise.noise(origin.x(),origin.y())*maxRadius);
-        yRadius = Math.abs(noise.noise(origin.z(),origin.y())*maxRadius);
+        xRadius = Math.abs(noise.noise(origin.x(), origin.y()) * MAX_RADIUS);
+        yRadius = Math.abs(noise.noise(origin.z(), origin.y()) * MAX_RADIUS);
 
-        for(int i=0; i<pnum; i++){
+        for (int i = 0; i < pnum; i++) {
             alpha = i * 2 * Math.PI / pnum;
 
-            length = Math.abs(noise.noise(origin.y()*i,origin.x()*i)*maxLength);
-            outerlength = Math.abs(noise.noise(origin.y()*i*2,origin.x()*i*2)*maxLengthOuter);
+            length = Math.abs(noise.noise(origin.y() * i, origin.x() * i) * MAX_LENGTH);
+            outerlength = Math.abs(noise.noise(origin.y() * i * 2, origin.x() * i * 2) * MAX_LENGTH_OUTER);
 
             //Lake Polygon points:
-            x[i] = origin.x()+Math.round(xRadius*(float)Math.cos((double) alpha));
-            y[i] = origin.z()+Math.round(yRadius*(float)Math.sin((double) alpha));
+            x[i] = origin.x() + Math.round(xRadius * (float) Math.cos((double) alpha));
+            y[i] = origin.z() + Math.round(yRadius * (float) Math.sin((double) alpha));
 
-            x[i]=Math.round(x[i]+Math.signum((x[i]-origin.x()))*length);
-            y[i]=Math.round(y[i]+Math.signum((y[i]-origin.z()))*length);
+            x[i] = Math.round(x[i] + Math.signum((x[i] - origin.x())) * length);
+            y[i] = Math.round(y[i] + Math.signum((y[i] - origin.z())) * length);
 
 
             //Outer Polygon points:
-            xOuter[i]=Math.round(x[i]+Math.signum((x[i]-origin.x()))*(2+Math.abs(outerlength)));
-            yOuter[i]=Math.round(y[i]+Math.signum((y[i]-origin.z()))*(2+Math.abs(outerlength)));
+            xOuter[i] = Math.round(x[i] + Math.signum((x[i] - origin.x())) * (Math.abs(outerlength)));
+            yOuter[i] = Math.round(y[i] + Math.signum((y[i] - origin.z())) * (Math.abs(outerlength)));
 
         }
 
 
-        lakePoly = new Polygon(x,y,pnum);
+        lakePoly = new Polygon(x, y, pnum);
         outerPoly = new Polygon(xOuter, yOuter, pnum);
 
     }
 
-    public boolean LakeContains(Vector3i pos){
-        return lakePoly.contains(pos.getX(),pos.getZ());
+    public boolean LakeContains(Vector3i pos) {
+        return lakePoly.contains(pos.getX(), pos.getZ());
     }
 
-    public boolean OuterContains(Vector3i pos){
-        return !lakePoly.contains(pos.getX(),pos.getZ()) && outerPoly.contains(pos.getX(),pos.getZ());
+    public boolean OuterContains(Vector3i pos) {
+        return !lakePoly.contains(pos.getX(), pos.getZ()) && outerPoly.contains(pos.getX(), pos.getZ());
     }
 
-    public boolean BBContains(Vector3i pos){
-        return outerPoly.getBounds().contains(pos.getX(),pos.getZ());
+    public boolean BBContains(Vector3i pos) {
+        return outerPoly.getBounds().contains(pos.getX(), pos.getZ());
     }
 
     public Rect2i getBB() {
@@ -111,26 +112,33 @@ public class Lake {
         return TeraRect;
     }
 
-    public Vector3i getOrigin(){
+    public Vector3i getOrigin() {
         return origin;
     }
 
     /**
      * Returns the y position of the lake surface.
+     *
      * @return Y of lake surface in world coordinates
      */
-    public int getWaterHeight() { return waterHeight; }
+    public int getWaterHeight() {
+        return waterHeight;
+    }
 
-    public void setWaterHeight( int waterHeight ) { this.waterHeight = waterHeight; }
+    public void setWaterHeight(int waterHeight) {
+        this.waterHeight = waterHeight;
+    }
 
     public boolean isNotNull() {
         return points != 0;
     }
 
-    public boolean isInRange(Vector3i pos ) {
-        if(origin == null){ return false; }
-        return Math.abs(pos.x()-origin.x())<=maxRadius && Math.abs(pos.z()-origin.z())<=maxRadius
-                && Math.abs(pos.x()-origin.x())<=maxDepth;
+    public boolean isInRange(Vector3i pos) {
+        if (origin == null) {
+            return false;
+        }
+        return Math.abs(pos.x() - origin.x()) <= MAX_SIZE && Math.abs(pos.z() - origin.z()) <= MAX_SIZE
+                && Math.abs(pos.y() - origin.y()) <= MAX_DEPTH;
     }
 
 }

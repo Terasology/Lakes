@@ -27,7 +27,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Produces(LavaFacet.class)
-@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 30)))
+@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Lake.MAX_RADIUS + Lake.MAX_LENGTH_OUTER + 1)))
 public class LavaProvider extends LakeProvider implements FacetProviderPlugin, ConfigurableFacetProvider {
     private LavaFacetProviderConfiguration configuration = new LavaFacetProviderConfiguration();
 
@@ -46,7 +46,7 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
         Border3D border = region.getBorderForFacet(LakeFacet.class);
         //Extend border by max radius + max length + max outer length and max lakedepth
-        border = border.extendBy(11, 12, 15);
+        border = border.extendBy(Lake.MAX_DEPTH, Lake.MAX_DEPTH, Lake.MAX_RADIUS + Lake.MAX_LENGTH_OUTER);
         LavaFacet lakes = new LavaFacet(region.getRegion(), border);
         Region3i processRegion = lakes.getWorldRegion();
 
@@ -56,7 +56,7 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
             for (Vector3i pos : processRegion) {
 
-                float noiseValue = noise.noise(pos.x(),pos.y(),pos.z());
+                float noiseValue = noise.noise(pos.x() * 0.1f,pos.y() * 0.1f,pos.z());
                 float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
 
                 if (pos.y() < sHeight - 40
