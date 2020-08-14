@@ -11,6 +11,8 @@ import org.terasology.core.world.generator.trees.Trees;
 import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector3i;
+import org.terasology.paradice.trees.GenericTrees;
+import org.terasology.rendering.nui.widgets.treeView.GenericTree;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
 import org.terasology.world.generation.Border3D;
@@ -55,7 +57,7 @@ public class LakeTreeProvider implements FacetProviderPlugin {
                         Lake lake = lakeFacet.getNearestLake(pos);
                         if (lake.isNotNull() && lake.getOrigin().y > surfaceHeight - 10 && noise.noise(wx, wz) > 0.99) {
                             if (lake.OuterContains(pos)) {
-                                TreeGenerator tree = Trees.oakTree();
+                                TreeGenerator tree = GenericTrees.palmTree();
                                 treeFacet.setWorld(wx, surfaceHeight, wz, tree);
                             }
                         }
