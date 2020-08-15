@@ -50,9 +50,9 @@ public class LakeFacet extends BaseFacet3D {
         return Collections.unmodifiableSet(lakes);
     }
 
-    public Lake getNearestLake(Vector3i pos){
+    public Lake getNearestLake(Vector3i pos) {
 
-        if(lakes.isEmpty()){
+        if (lakes.isEmpty()) {
             return NullLake;
         }
 
@@ -60,18 +60,22 @@ public class LakeFacet extends BaseFacet3D {
 
         double dis = Double.MAX_VALUE;
 
-        for(Lake lake : lakes){
-            double newDis =  pos.distanceSquared(lake.getOrigin());
-            if(dis > newDis){
+        for (Lake lake : lakes) {
+            double newDis = pos.distanceSquared(lake.getOrigin());
+            if (dis > newDis) {
                 nearest = lake;
-                dis=newDis;
+                dis = newDis;
             }
         }
 
         return nearest;
     }
 
-    public boolean isEnabled() { return enabled; }
+    public boolean isEnabled() {
+        return enabled;
+    }
 
-    public void setEnabled( boolean enabled ){ this.enabled = enabled; }
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 }

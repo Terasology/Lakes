@@ -22,7 +22,8 @@ import org.terasology.world.generation.facets.SurfaceHeightFacet;
 import org.terasology.world.generation.facets.base.BaseFieldFacet2D;
 
 /**
- * Marks the amount of empty space, e.g. air blocks, there will be over lake surface should there be some in the particular xz coordinates.
+ * Marks the amount of empty space, e.g. air blocks, there will be over lake surface should there be some in the
+ * particular xz coordinates.
  */
 public class LakeHeightFacet extends BaseFieldFacet2D {
 
@@ -32,6 +33,6 @@ public class LakeHeightFacet extends BaseFieldFacet2D {
 
 
     public int getWorldIndex(BaseVector2i pos) {
-        return getWorldIndex(pos.x(),pos.y());
+        return getWorldIndex(pos.x(), pos.y());
     }
 }

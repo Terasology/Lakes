@@ -27,7 +27,8 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Produces(LavaFacet.class)
-@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Lake.MAX_RADIUS + Lake.MAX_LENGTH_OUTER + 1)))
+@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides =
+        Lake.MAX_RADIUS + Lake.MAX_LENGTH_OUTER + 1)))
 public class LavaProvider extends LakeProvider implements FacetProviderPlugin, ConfigurableFacetProvider {
     private LavaFacetProviderConfiguration configuration = new LavaFacetProviderConfiguration();
 
@@ -56,11 +57,11 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
             for (Vector3i pos : processRegion) {
 
-                float noiseValue = noise.noise(pos.x() * 0.1f,pos.y() * 0.1f,pos.z());
+                float noiseValue = noise.noise(pos.x() * 0.1f, pos.y() * 0.1f, pos.z());
                 float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
 
                 if (pos.y() < sHeight - 40
-                        && noiseValue > 0.999999 - Math.log(1+(sHeight - pos.y())/4)*0.00001) {
+                        && noiseValue > 0.999999 - Math.log(1 + (sHeight - pos.y()) / 4) * 0.00001) {
 
                     lakes.add(new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z())))));
 
@@ -69,9 +70,9 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
                     Lake temp = new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z()))));
 
-                    if (checkCorners(temp.getBB(), surfaceHeightFacet)) {
+                    if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
 
-                        int minHeight = getMinimumHeight(temp.getBB(), surfaceHeightFacet);
+                        int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
 
                         if (minHeight < pos.y()) {
                             temp.setWaterHeight(minHeight);
@@ -109,5 +110,4 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
         @Checkbox(description = "Enable Lava Lakes")
         public boolean enabled = true;
     }
-
 }

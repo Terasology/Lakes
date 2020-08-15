@@ -17,11 +17,11 @@ package org.terasology.Lakes;
 
 import org.terasology.core.world.CoreBiome;
 import org.terasology.core.world.generator.facets.BiomeFacet;
-import org.terasology.core.world.generator.trees.Trees;
 import org.terasology.math.Region3i;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector2i;
 import org.terasology.math.geom.Vector3i;
+import org.terasology.naming.Name;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
 import org.terasology.world.generation.*;
@@ -57,19 +57,15 @@ public class LakeProvider implements FacetProviderPlugin {
 
         for (Vector3i pos : worldRegion) {
             float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
-            float noiseValue;
-            if (biomeFacet.getWorld(pos.x(), pos.z()).getId().equals(CoreBiome.DESERT.getId())) {
-                noiseValue = noise.noise(pos.x() * 0.01f, pos.y(), pos.z() * 0.01f);
-            } else {
-                noiseValue = noise.noise(pos.x() * 0.1f, pos.y(), pos.z() * 0.1f);
-            }
-            if (pos.y() < sHeight - 20 && noiseValue > 0.999999) {
+            float probability;
+            probability = computeProbability(pos, biomeFacet);
+            if (pos.y() < sHeight - 20 && probability > 0.999999) {
                 lakes.add(new Lake(pos, 10 + Math.round(20 * Math.abs(noise.noise(pos.x(), pos.z())))));
-            } else if (pos.y() == Math.round(sHeight) && noiseValue > 0.9999 && checkGradient(pos,
+            } else if (pos.y() == Math.round(sHeight) && probability > 0.9999 && checkGradient(pos,
                     surfaceHeightFacet)) {
                 Lake temp = new Lake(pos, 10 + Math.round(20 * Math.abs((noise.noise(pos.x(), pos.z())))));
-                if (checkCorners(temp.getBB(), surfaceHeightFacet)) {
-                    int minHeight = getMinimumHeight(temp.getBB(), surfaceHeightFacet);
+                if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
+                    int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
                     if (minHeight < pos.y()) {
                         temp.setWaterHeight(minHeight);
                     }
@@ -82,11 +78,22 @@ public class LakeProvider implements FacetProviderPlugin {
         region.setRegionFacet(LakeFacet.class, lakes);
     }
 
+    private float computeProbability(Vector3i pos, BiomeFacet biomeFacet) {
+        float probability;
+        Name biomeID = biomeFacet.getWorld(pos.x(), pos.z()).getId();
+        if (biomeID.equals(CoreBiome.DESERT.getId())) {
+            probability = noise.noise(pos.x() * 0.01f, pos.y(), pos.z() * 0.01f);
+        } else {
+            probability = noise.noise(pos.x() * 0.1f, pos.y(), pos.z() * 0.1f);
+        }
+        return probability;
+    }
+
     protected boolean checkGradient(Vector3i pos, BaseFieldFacet2D facet) {
 
-        Rect2i BB = Rect2i.createFromMinAndMax(pos.x() - 3, pos.z() - 3, pos.x() + 3, pos.z() + 3);
+        Rect2i boundingBox = Rect2i.createFromMinAndMax(pos.x() - 3, pos.z() - 3, pos.x() + 3, pos.z() + 3);
 
-        if (facet.getWorldRegion().contains(BB)) {
+        if (facet.getWorldRegion().contains(boundingBox)) {
             float xDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z()) - facet.getWorld(pos.x() - 3, pos.z()));
             float yDiff = Math.abs(facet.getWorld(pos.x(), pos.z() + 3) - facet.getWorld(pos.x(), pos.z() - 3));
             float xyDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z() + 3) - facet.getWorld(pos.x() - 3,
@@ -99,15 +106,15 @@ public class LakeProvider implements FacetProviderPlugin {
         return false;
     }
 
-    protected boolean checkCorners(Rect2i BB, BaseFieldFacet2D facet) {
-        Vector2i max = BB.max();
-        Vector2i min = BB.min();
-        if (facet.getWorldRegion().contains(BB)) {
+    protected boolean checkCorners(Rect2i boundingBox, BaseFieldFacet2D facet) {
+        Vector2i max = boundingBox.max();
+        Vector2i min = boundingBox.min();
+        if (facet.getWorldRegion().contains(boundingBox)) {
             float[] corners = new float[4];
             corners[0] = facet.getWorld(max);
             corners[1] = facet.getWorld(min);
-            corners[2] = facet.getWorld(min.x() + BB.sizeX(), min.y());
-            corners[3] = facet.getWorld(min.x(), min.y() + BB.sizeY());
+            corners[2] = facet.getWorld(min.x() + boundingBox.sizeX(), min.y());
+            corners[3] = facet.getWorld(min.x(), min.y() + boundingBox.sizeY());
             for (int i = 0; i < corners.length; i++) {
                 for (int j = 0; j < corners.length; j++) {
                     if (Math.abs(corners[i] - corners[j]) > 4) {

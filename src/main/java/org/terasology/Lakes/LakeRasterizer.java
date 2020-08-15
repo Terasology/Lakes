@@ -58,27 +58,23 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
             Lake lake = lakeFacet.getNearestLake(position);
             Lake lavaLake = lavaFacet.getNearestLake(position);
 
-            if(lake.isNotNull() && lake.isInRange(position) ) {
+            if (lake.isNotNull() && lake.isInRange(position)) {
 
                 float surfaceHeight = surfaceHeightFacet.getWorld(position.x(), position.z());
                 float lakeDepth = lakeDepthFacet.getWorld(position.x(), position.z());
                 float lakeHeight = lakeHeightFacet.getWorld(position.x(), position.z());
 
                 if (lake.LakeContains(position) && position.y() <= lake.getWaterHeight() && (position.y() >= lake.getWaterHeight() - lakeDepth ||
-                    position.y() > surfaceHeight)) {
+                        position.y() > surfaceHeight)) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), water);
-                }
-
-               else if (lake.OuterContains(position) && position.y() <= lake.getWaterHeight() && position.y() >= surfaceHeight) {
+                } else if (lake.OuterContains(position) && position.y() <= lake.getWaterHeight() && position.y() >= surfaceHeight) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), sand);
-                }
-
-                else if (lake.LakeContains(position) && position.y() > lake.getWaterHeight() && position.y() <= lake.getWaterHeight() + lakeHeight) {
+                } else if (lake.LakeContains(position) && position.y() > lake.getWaterHeight() && position.y() <= lake.getWaterHeight() + lakeHeight) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), air);
                 }
             }
 
-            if(lavaFacet.isEnabled() && lavaLake.isNotNull() && lake.isInRange(position)) {
+            if (lavaFacet.isEnabled() && lavaLake.isNotNull() && lake.isInRange(position)) {
 
                 float surfaceHeight = surfaceHeightFacet.getWorld(position.x(), position.z());
                 float lakeDepth = lakeDepthFacet.getWorld(position.x(), position.z());
@@ -87,13 +83,9 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
                 if (lavaLake.LakeContains(position) && position.y() <= lavaLake.getWaterHeight() && (position.y() >= lavaLake.getWaterHeight() - lakeDepth ||
                         position.y() > surfaceHeight)) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), lava);
-                }
-
-                else if (lavaLake.OuterContains(position) && position.y() <= lavaLake.getWaterHeight() && position.y() >= surfaceHeight) {
+                } else if (lavaLake.OuterContains(position) && position.y() <= lavaLake.getWaterHeight() && position.y() >= surfaceHeight) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), stone);
-                }
-
-                else if (lavaLake.LakeContains(position) && position.y() > lavaLake.getWaterHeight() && position.y() <= lavaLake.getWaterHeight() + lakeHeight) {
+                } else if (lavaLake.LakeContains(position) && position.y() > lavaLake.getWaterHeight() && position.y() <= lavaLake.getWaterHeight() + lakeHeight) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), air);
                 }
             }

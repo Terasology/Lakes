@@ -37,9 +37,10 @@ public class LakeHeightProvider implements FacetProviderPlugin {
 
     @Override
     public void setSeed(long seed) {
-        surfaceNoise1 = new SubSampledNoise(new SimplexNoise(seed/2), new Vector2f(0.05f, 0.05f), 1);
-        surfaceNoise2 = new SubSampledNoise(new BrownianNoise(new SimplexNoise(seed/8), 8), new Vector2f(0.05f, 0.05f), 1);
-        surfaceNoise3 = new SubSampledNoise(new SimplexNoise(seed/4), new Vector2f(0.002f, 0.002f), 1);
+        surfaceNoise1 = new SubSampledNoise(new SimplexNoise(seed / 2), new Vector2f(0.05f, 0.05f), 1);
+        surfaceNoise2 = new SubSampledNoise(new BrownianNoise(new SimplexNoise(seed / 8), 8), new Vector2f(0.05f,
+                0.05f), 1);
+        surfaceNoise3 = new SubSampledNoise(new SimplexNoise(seed / 4), new Vector2f(0.002f, 0.002f), 1);
     }
 
     @Override
@@ -59,7 +60,7 @@ public class LakeHeightProvider implements FacetProviderPlugin {
             float noiseValue2 = sNoise2Values[facet.getWorldIndex(position)];
             float noiseValue3 = sNoise3Values[facet.getWorldIndex(position)];
 
-            facet.setWorld(position, 1+4*Math.abs(noiseValue1+noiseValue2+noiseValue3));
+            facet.setWorld(position, 1 + 4 * Math.abs(noiseValue1 + noiseValue2 + noiseValue3));
 
         }
 

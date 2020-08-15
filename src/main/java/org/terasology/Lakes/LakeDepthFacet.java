@@ -22,8 +22,9 @@ import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
 /**
  * Marks how deep a lake would be at given world coordinates (x, z).
- *
- * The lake depth is given as positive floating point value which should be interpreted as depth from actual surface height.
+ * <p>
+ * The lake depth is given as positive floating point value which should be interpreted as depth from actual surface
+ * height.
  */
 public class LakeDepthFacet extends SurfaceHeightFacet {
 
@@ -32,6 +33,6 @@ public class LakeDepthFacet extends SurfaceHeightFacet {
     }
 
     public int getWorldIndex(BaseVector2i pos) {
-        return getWorldIndex(pos.x(),pos.y());
+        return getWorldIndex(pos.x(), pos.y());
     }
 }

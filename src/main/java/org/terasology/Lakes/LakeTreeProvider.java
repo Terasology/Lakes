@@ -39,7 +39,6 @@ public class LakeTreeProvider implements FacetProviderPlugin {
 
     @Override
     public void process(GeneratingRegion region) {
-//        Border3D borderForTreeFacet = region.getBorderForFacet(TreeFacet.class);
         TreeFacet treeFacet = region.getRegionFacet(TreeFacet.class);
 
         SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
@@ -65,8 +64,6 @@ public class LakeTreeProvider implements FacetProviderPlugin {
                 }
             }
         }
-
-//        region.setRegionFacet(TreeFacet.class, treeFacet);
     }
 
     @Override

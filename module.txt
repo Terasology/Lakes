@@ -1,7 +1,7 @@
 {
     "id": "Lakes",
     "version": "1.0.0",
-    "author": "Cpt. Crispy Crunchy, sin3point14",
+    "author": "The Terasology Foundation",
     "displayName": "Lakes",
     "description": "Plugin for Worldgenerator, which creates lakes based on random polygons",
     "dependencies": [

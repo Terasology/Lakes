@@ -34,7 +34,7 @@ public class Lake {
     private Polygon lakePoly;
     private Polygon outerPoly;
     private Noise noise;
-    private int points;
+    private final int points;
 
     public Lake(Vector3i origin, int pnum) {
         long seed = Math.round(origin.length() * 217645199);
@@ -100,16 +100,16 @@ public class Lake {
         return !lakePoly.contains(pos.getX(), pos.getZ()) && outerPoly.contains(pos.getX(), pos.getZ());
     }
 
-    public boolean BBContains(Vector3i pos) {
+    public boolean boundingBoxContains(Vector3i pos) {
         return outerPoly.getBounds().contains(pos.getX(), pos.getZ());
     }
 
-    public Rect2i getBB() {
-        Rectangle AwtRect = outerPoly.getBounds();
-        Rect2i TeraRect = Rect2i.createFromMinAndMax(Math.round((float) AwtRect.getMinX()),
-                Math.round((float) AwtRect.getMinY()), Math.round((float) AwtRect.getMaxX()),
-                Math.round((float) AwtRect.getMaxY()));
-        return TeraRect;
+    public Rect2i getBoundingBox() {
+        Rectangle awtRect = outerPoly.getBounds();
+        Rect2i teraRect = Rect2i.createFromMinAndMax(Math.round((float) awtRect.getMinX()),
+                Math.round((float) awtRect.getMinY()), Math.round((float) awtRect.getMaxX()),
+                Math.round((float) awtRect.getMaxY()));
+        return teraRect;
     }
 
     public Vector3i getOrigin() {
