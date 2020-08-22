@@ -20,7 +20,8 @@ import org.terasology.math.geom.Vector3i;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
 
-import java.awt.*;
+import java.awt.Polygon;
+import java.awt.Rectangle;
 
 public class Lake {
     public static final int MAX_LENGTH = 10;

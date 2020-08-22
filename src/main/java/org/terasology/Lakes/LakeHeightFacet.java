@@ -18,7 +18,6 @@ package org.terasology.Lakes;
 import org.terasology.math.Region3i;
 import org.terasology.math.geom.BaseVector2i;
 import org.terasology.world.generation.Border3D;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
 import org.terasology.world.generation.facets.base.BaseFieldFacet2D;
 
 /**
