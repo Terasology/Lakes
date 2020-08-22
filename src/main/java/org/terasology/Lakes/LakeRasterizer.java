@@ -86,6 +86,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
                 } else if (lavaLake.OuterContains(position) && position.y() <= lavaLake.getWaterHeight() && position.y() >= surfaceHeight) {
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), stone);
                 } else if (lavaLake.LakeContains(position) && position.y() > lavaLake.getWaterHeight() && position.y() <= lavaLake.getWaterHeight() + lakeHeight) {
+
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(position), air);
                 }
             }
