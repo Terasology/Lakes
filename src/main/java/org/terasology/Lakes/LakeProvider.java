@@ -77,6 +77,9 @@ public class LakeProvider implements FacetProviderPlugin {
         for (int wy = start.y(); wy < worldRegion.maxY(); wy += SKIP_BLOCKS) {
             for (int wx = start.x(); wx < worldRegion.maxX(); wx += SKIP_BLOCKS) {
                 for (int wz = start.z(); wz < worldRegion.maxZ(); wz += SKIP_BLOCKS) {
+                    // To any future onlooker, pos needs to be created a new Vector3i here or else the lakes
+                    // don't expand beyond one chunk for reasons unknown. Tried doing pos.set(wx, wy, wz)
+                    // and it didn't work - sin3point14
                     Vector3i pos = new Vector3i(wx, wy, wz);
                     float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
                     if (pos.y() < sHeight - 20) {
