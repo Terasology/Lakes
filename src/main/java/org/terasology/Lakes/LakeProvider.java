@@ -42,11 +42,17 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
         @Facet(value = BiomeFacet.class, border = @FacetBorder(sides = (Lake.MAX_SIZE) * 2))
 })
 public class LakeProvider implements FacetProviderPlugin {
+    private static final int SKIP_BLOCKS = 3;
+    // Don't make any of these constants integer values, the noise functions returns only 0 or 1 for them
+    private static final float SURFACE_LAKES_SAMPLING_CONSTANT = 0.9f;
+    private static final float SURFACE_DESERT_LAKES_SAMPLING_CONSTANT = 0.3f;
+    private static final float UNDERGROUND_LAKES_SAMPLING_CONSTANT = 0.3f;
 
     private Noise noise;
 
     @Override
     public void setSeed(long seed) {
+        // to change the seed value
         noise = new WhiteNoise(seed * 3882);
     }
 
@@ -62,36 +68,44 @@ public class LakeProvider implements FacetProviderPlugin {
         BiomeFacet biomeFacet = region.getRegionFacet(BiomeFacet.class);
 
         Vector3i min = worldRegion.min();
-        int step = 3;
         Vector3i start = new Vector3i(
-                (min.x() + (step - Math.floorMod(min.x(), step))),
-                min.y() + (step - Math.floorMod(min.y(), step)),
-                min.z() + (step - Math.floorMod(min.z(), step))
+                (min.x() + (SKIP_BLOCKS - Math.floorMod(min.x(), SKIP_BLOCKS))),
+                min.y() + (SKIP_BLOCKS - Math.floorMod(min.y(), SKIP_BLOCKS)),
+                min.z() + (SKIP_BLOCKS - Math.floorMod(min.z(), SKIP_BLOCKS))
         );
 
-        for (int wy = start.y(); wy < worldRegion.maxY(); wy += step) {
-            for (int wx = start.x(); wx < worldRegion.maxX(); wx += step) {
-                for (int wz = start.z(); wz < worldRegion.maxZ(); wz += step) {
+        for (int wy = start.y(); wy < worldRegion.maxY(); wy += SKIP_BLOCKS) {
+            for (int wx = start.x(); wx < worldRegion.maxX(); wx += SKIP_BLOCKS) {
+                for (int wz = start.z(); wz < worldRegion.maxZ(); wz += SKIP_BLOCKS) {
                     Vector3i pos = new Vector3i(wx, wy, wz);
                     float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
                     if (pos.y() < sHeight - 20) {
                         // Underground Lakes
-                        // If the sampling contant(0.3) is changed also adjust the number of '9's in the comparison
+                        // If the sampling constant(0.3) is changed also adjust the number of '9's in the comparison
                         // same goes for other places noise has been sampled
-                        if (noise.noise(pos.x() * 0.3f, pos.y() * 0.3f, pos.z() * 0.3f) > 0.9999) {
-                            lakes.add(new Lake(pos, 10 + Math.round(20 * Math.abs(noise.noise(pos.x(), pos.z())))));
+                        if (noise.noise(
+                                pos.x() * UNDERGROUND_LAKES_SAMPLING_CONSTANT,
+                                pos.y() * UNDERGROUND_LAKES_SAMPLING_CONSTANT,
+                                pos.z() * UNDERGROUND_LAKES_SAMPLING_CONSTANT
+                        ) > 0.9999
+                        ) {
+                            lakes.add(new Lake(pos, Lake.MIN_VERTICES +
+                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
+                            ));
                         }
                     } else if (pos.y() == Math.round(sHeight) && checkGradient(pos,
                             surfaceHeightFacet)) {
-                        // Overground Lakes
+                        // Surface Lakes
                         if (computeProbability(pos, biomeFacet) > 0.99) {
-                            Lake tempL = new Lake(pos, 10 + Math.round(20 * Math.abs((noise.noise(pos.x(), pos.z())))));
-                            if (checkCorners(tempL.getBoundingBox(), surfaceHeightFacet)) {
-                                int minHeight = getMinimumHeight(tempL.getBoundingBox(), surfaceHeightFacet);
+                            Lake temp = new Lake(pos, Lake.MIN_VERTICES +
+                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
+                            );
+                            if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
+                                int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
                                 if (minHeight < pos.y()) {
-                                    tempL.setWaterHeight(minHeight);
+                                    temp.setWaterHeight(minHeight);
                                 }
-                                lakes.add(tempL);
+                                lakes.add(temp);
                             }
                         }
                     }
@@ -105,9 +119,17 @@ public class LakeProvider implements FacetProviderPlugin {
         float probability;
         Name biomeID = biomeFacet.getWorld(pos.x(), pos.z()).getId();
         if (biomeID.equals(CoreBiome.DESERT.getId())) {
-            probability = noise.noise(pos.x() * 0.3f, pos.y() * 0.3f, pos.z() * 0.3f);
+            probability = noise.noise(
+                    pos.x() * SURFACE_DESERT_LAKES_SAMPLING_CONSTANT,
+                    pos.y() * SURFACE_DESERT_LAKES_SAMPLING_CONSTANT,
+                    pos.z() * SURFACE_DESERT_LAKES_SAMPLING_CONSTANT
+            );
         } else {
-            probability = noise.noise(pos.x() * 0.9f, pos.y() * 0.9f, pos.z() * 0.9f);
+            probability = noise.noise(
+                    pos.x() * SURFACE_LAKES_SAMPLING_CONSTANT,
+                    pos.y() * SURFACE_LAKES_SAMPLING_CONSTANT,
+                    pos.z() * SURFACE_LAKES_SAMPLING_CONSTANT
+            );
 
         }
         return probability;

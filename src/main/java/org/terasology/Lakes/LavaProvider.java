@@ -37,6 +37,10 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 @Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides =
         Lake.MAX_RADIUS + Lake.MAX_LENGTH_OUTER + 1)))
 public class LavaProvider extends LakeProvider implements FacetProviderPlugin, ConfigurableFacetProvider {
+
+    private static final int SKIP_BLOCKS = 3;
+    private static final float UNDERGROUND_LAVA_LAKES_SAMPLING_CONSTANT = 0.3f;
+
     private LavaFacetProviderConfiguration configuration = new LavaFacetProviderConfiguration();
 
     private Noise noise;
@@ -63,29 +67,37 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
         if (enabled) {
 
             Vector3i min = processRegion.min();
-            int step = 3;
+            int STEP = 3;
             Vector3i start = new Vector3i(
-                    (min.x() + (step - Math.floorMod(min.x(), step))),
-                    min.y() + (step - Math.floorMod(min.y(), step)),
-                    min.z() + (step - Math.floorMod(min.z(), step))
+                    (min.x() + (STEP - Math.floorMod(min.x(), STEP))),
+                    min.y() + (STEP - Math.floorMod(min.y(), STEP)),
+                    min.z() + (STEP - Math.floorMod(min.z(), STEP))
             );
 
-            for (int wy = start.y(); wy < processRegion.maxY(); wy += step) {
-                for (int wx = start.x(); wx < processRegion.maxX(); wx += step) {
-                    for (int wz = start.z(); wz < processRegion.maxZ(); wz += step) {
+            for (int wy = start.y(); wy < processRegion.maxY(); wy += STEP) {
+                for (int wx = start.x(); wx < processRegion.maxX(); wx += STEP) {
+                    for (int wz = start.z(); wz < processRegion.maxZ(); wz += STEP) {
                         Vector3i pos = new Vector3i(wx, wy, wz);
-                        float noiseValue = noise.noise(pos.x() * 0.3f, pos.y() * 0.3f, pos.z() * 0.3f);
+                        float noiseValue = noise.noise(
+                                pos.x() * UNDERGROUND_LAVA_LAKES_SAMPLING_CONSTANT,
+                                pos.y() * UNDERGROUND_LAVA_LAKES_SAMPLING_CONSTANT,
+                                pos.z() * UNDERGROUND_LAVA_LAKES_SAMPLING_CONSTANT
+                        );
                         float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
 
                         if (pos.y() < sHeight - 40
                                 && noiseValue > 0.9999 - Math.log(1 + (sHeight - pos.y()) / 4) * 0.00001) {
 
-                            lakes.add(new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z())))));
+                            lakes.add(new Lake(pos, Lake.MIN_VERTICES +
+                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
+                            ););
 
                         } else if (pos.y() == Math.round(sHeight) && noiseValue > 0.999995
                                 && checkGradient(pos, surfaceHeightFacet)) {
 
-                            Lake temp = new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z()))));
+                            Lake temp = new Lake(pos, Lake.MIN_VERTICES +
+                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
+                            );
 
                             if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
 

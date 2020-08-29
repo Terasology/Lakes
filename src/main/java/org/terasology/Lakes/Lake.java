@@ -29,6 +29,8 @@ public class Lake {
     public static final int MAX_RADIUS = 20;
     public static final int MAX_SIZE = MAX_RADIUS + MAX_LENGTH + MAX_LENGTH_OUTER;
     public static final int MAX_DEPTH = 12;
+    public static final int MIN_VERTICES = 10;
+    public static final int MAX_VERTICES = 30;
 
     private Vector3i origin;
     private int waterHeight;
