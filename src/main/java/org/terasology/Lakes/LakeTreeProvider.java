@@ -50,7 +50,9 @@ public class LakeTreeProvider implements FacetProviderPlugin {
                     if (biomeFacet.getWorld(wx, wz).getId().equals(CoreBiome.DESERT.getId())) {
 
                         Lake lake = lakeFacet.getNearestLake(pos);
-                        if (lake.isNotNull() && lake.getOrigin().y > surfaceHeight - 10 && noise.noise(wx, wz) > 0.99) {
+                        if (lake.isNotNull() && lake.getOrigin().y > surfaceHeight - 10
+                                && noise.noise(wx, wz) > 0.99
+                        ) {
                             if (lake.OuterContains(pos)) {
                                 TreeGenerator tree = GenericTrees.palmTree();
                                 treeFacet.setWorld(wx, surfaceHeight, wz, tree);

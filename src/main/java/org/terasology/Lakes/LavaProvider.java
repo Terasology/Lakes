@@ -43,7 +43,7 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
     @Override
     public void setSeed(long seed) {
-        noise = new WhiteNoise(seed);
+        noise = new WhiteNoise(seed * 73946);
     }
 
     @Override
@@ -62,35 +62,47 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
         if (enabled) {
 
-            for (Vector3i pos : processRegion) {
+            Vector3i min = processRegion.min();
+            int step = 3;
+            Vector3i start = new Vector3i(
+                    (min.x() + (step - Math.floorMod(min.x(), step))),
+                    min.y() + (step - Math.floorMod(min.y(), step)),
+                    min.z() + (step - Math.floorMod(min.z(), step))
+            );
 
-                float noiseValue = noise.noise(pos.x() * 0.1f, pos.y() * 0.1f, pos.z());
-                float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
+            for (int wy = start.y(); wy < processRegion.maxY(); wy += step) {
+                for (int wx = start.x(); wx < processRegion.maxX(); wx += step) {
+                    for (int wz = start.z(); wz < processRegion.maxZ(); wz += step) {
+                        Vector3i pos = new Vector3i(wx, wy, wz);
+                        float noiseValue = noise.noise(pos.x() * 0.3f, pos.y() * 0.3f, pos.z() * 0.3f);
+                        float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
 
-                if (pos.y() < sHeight - 40
-                        && noiseValue > 0.999999 - Math.log(1 + (sHeight - pos.y()) / 4) * 0.00001) {
+                        if (pos.y() < sHeight - 40
+                                && noiseValue > 0.9999 - Math.log(1 + (sHeight - pos.y()) / 4) * 0.00001) {
 
-                    lakes.add(new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z())))));
+                            lakes.add(new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z())))));
 
-                } else if (pos.y() == Math.round(sHeight) && noiseValue > 0.999995
-                        && checkGradient(pos, surfaceHeightFacet)) {
+                        } else if (pos.y() == Math.round(sHeight) && noiseValue > 0.999995
+                                && checkGradient(pos, surfaceHeightFacet)) {
 
-                    Lake temp = new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z()))));
+                            Lake temp = new Lake(pos, 10 + 20 * Math.abs(Math.round(noise.noise(pos.x(), pos.z()))));
 
-                    if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
+                            if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
 
-                        int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
+                                int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
 
-                        if (minHeight < pos.y()) {
-                            temp.setWaterHeight(minHeight);
+                                if (minHeight < pos.y()) {
+                                    temp.setWaterHeight(minHeight);
+                                }
+
+                                lakes.add(temp);
+
+                            }
+
                         }
 
-                        lakes.add(temp);
-
                     }
-
                 }
-
             }
         }
 

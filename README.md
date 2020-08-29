@@ -7,6 +7,7 @@ Current features:
 -underground and surface lakes and lava lakes  
 -lava lakes can be turned on and off  
 -lakes will create a small cave above them  
+-desert lakes are less probable and will turn into palm tree oasis
 
 Known issues:  
 -Missing biome modification to prevent grass and trees to spawn on lakes  

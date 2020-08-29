@@ -47,7 +47,7 @@ public class LakeProvider implements FacetProviderPlugin {
 
     @Override
     public void setSeed(long seed) {
-        noise = new WhiteNoise(seed);
+        noise = new WhiteNoise(seed * 3882);
     }
 
     @Override
@@ -61,26 +61,43 @@ public class LakeProvider implements FacetProviderPlugin {
         Region3i worldRegion = lakes.getWorldRegion();
         BiomeFacet biomeFacet = region.getRegionFacet(BiomeFacet.class);
 
-        for (Vector3i pos : worldRegion) {
-            float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
-            float probability;
-            probability = computeProbability(pos, biomeFacet);
-            if (pos.y() < sHeight - 20 && probability > 0.999999) {
-                lakes.add(new Lake(pos, 10 + Math.round(20 * Math.abs(noise.noise(pos.x(), pos.z())))));
-            } else if (pos.y() == Math.round(sHeight) && probability > 0.9999 && checkGradient(pos,
-                    surfaceHeightFacet)) {
-                Lake temp = new Lake(pos, 10 + Math.round(20 * Math.abs((noise.noise(pos.x(), pos.z())))));
-                if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
-                    int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
-                    if (minHeight < pos.y()) {
-                        temp.setWaterHeight(minHeight);
+        Vector3i min = worldRegion.min();
+        int step = 3;
+        Vector3i start = new Vector3i(
+                (min.x() + (step - Math.floorMod(min.x(), step))),
+                min.y() + (step - Math.floorMod(min.y(), step)),
+                min.z() + (step - Math.floorMod(min.z(), step))
+        );
+
+        for (int wy = start.y(); wy < worldRegion.maxY(); wy += step) {
+            for (int wx = start.x(); wx < worldRegion.maxX(); wx += step) {
+                for (int wz = start.z(); wz < worldRegion.maxZ(); wz += step) {
+                    Vector3i pos = new Vector3i(wx, wy, wz);
+                    float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
+                    if (pos.y() < sHeight - 20) {
+                        // Underground Lakes
+                        // If the sampling contant(0.3) is changed also adjust the number of '9's in the comparison
+                        // same goes for other places noise has been sampled
+                        if (noise.noise(pos.x() * 0.3f, pos.y() * 0.3f, pos.z() * 0.3f) > 0.9999) {
+                            lakes.add(new Lake(pos, 10 + Math.round(20 * Math.abs(noise.noise(pos.x(), pos.z())))));
+                        }
+                    } else if (pos.y() == Math.round(sHeight) && checkGradient(pos,
+                            surfaceHeightFacet)) {
+                        // Overground Lakes
+                        if (computeProbability(pos, biomeFacet) > 0.99) {
+                            Lake tempL = new Lake(pos, 10 + Math.round(20 * Math.abs((noise.noise(pos.x(), pos.z())))));
+                            if (checkCorners(tempL.getBoundingBox(), surfaceHeightFacet)) {
+                                int minHeight = getMinimumHeight(tempL.getBoundingBox(), surfaceHeightFacet);
+                                if (minHeight < pos.y()) {
+                                    tempL.setWaterHeight(minHeight);
+                                }
+                                lakes.add(tempL);
+                            }
+                        }
                     }
-                    lakes.add(temp);
                 }
             }
         }
-
-
         region.setRegionFacet(LakeFacet.class, lakes);
     }
 
@@ -88,9 +105,10 @@ public class LakeProvider implements FacetProviderPlugin {
         float probability;
         Name biomeID = biomeFacet.getWorld(pos.x(), pos.z()).getId();
         if (biomeID.equals(CoreBiome.DESERT.getId())) {
-            probability = noise.noise(pos.x() * 0.01f, pos.y(), pos.z() * 0.01f);
+            probability = noise.noise(pos.x() * 0.3f, pos.y() * 0.3f, pos.z() * 0.3f);
         } else {
-            probability = noise.noise(pos.x() * 0.1f, pos.y(), pos.z() * 0.1f);
+            probability = noise.noise(pos.x() * 0.9f, pos.y() * 0.9f, pos.z() * 0.9f);
+
         }
         return probability;
     }
