@@ -90,7 +90,7 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
 
                             lakes.add(new Lake(pos, Lake.MIN_VERTICES +
                                     Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
-                            ););
+                            ));
 
                         } else if (pos.y() == Math.round(sHeight) && noiseValue > 0.999995
                                 && checkGradient(pos, surfaceHeightFacet)) {
