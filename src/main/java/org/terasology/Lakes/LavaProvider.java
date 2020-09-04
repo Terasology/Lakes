@@ -67,16 +67,15 @@ public class LavaProvider extends LakeProvider implements FacetProviderPlugin, C
         if (enabled) {
 
             Vector3i min = processRegion.min();
-            int STEP = 3;
             Vector3i start = new Vector3i(
-                    (min.x() + (STEP - Math.floorMod(min.x(), STEP))),
-                    min.y() + (STEP - Math.floorMod(min.y(), STEP)),
-                    min.z() + (STEP - Math.floorMod(min.z(), STEP))
+                    (min.x() + (SKIP_BLOCKS - Math.floorMod(min.x(), SKIP_BLOCKS))),
+                    min.y() + (SKIP_BLOCKS - Math.floorMod(min.y(), SKIP_BLOCKS)),
+                    min.z() + (SKIP_BLOCKS - Math.floorMod(min.z(), SKIP_BLOCKS))
             );
 
-            for (int wy = start.y(); wy < processRegion.maxY(); wy += STEP) {
-                for (int wx = start.x(); wx < processRegion.maxX(); wx += STEP) {
-                    for (int wz = start.z(); wz < processRegion.maxZ(); wz += STEP) {
+            for (int wy = start.y(); wy < processRegion.maxY(); wy += SKIP_BLOCKS) {
+                for (int wx = start.x(); wx < processRegion.maxX(); wx += SKIP_BLOCKS) {
+                    for (int wz = start.z(); wz < processRegion.maxZ(); wz += SKIP_BLOCKS) {
                         Vector3i pos = new Vector3i(wx, wy, wz);
                         float noiseValue = noise.noise(
                                 pos.x() * UNDERGROUND_LAVA_LAKES_SAMPLING_CONSTANT,
