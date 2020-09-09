@@ -3,25 +3,25 @@
 
 package org.terasology.Lakes;
 
-import org.terasology.core.world.CoreBiome;
-import org.terasology.core.world.generator.facets.BiomeFacet;
-import org.terasology.core.world.generator.facets.TreeFacet;
-import org.terasology.core.world.generator.trees.TreeGenerator;
-import org.terasology.core.world.generator.trees.Trees;
+import org.terasology.coreworlds.CoreBiome;
+import org.terasology.coreworlds.generator.facets.BiomeFacet;
+import org.terasology.coreworlds.generator.facets.TreeFacet;
+import org.terasology.coreworlds.generator.trees.TreeGenerator;
+import org.terasology.coreworlds.generator.trees.Trees;
+import org.terasology.engine.utilities.procedural.Noise;
+import org.terasology.engine.utilities.procedural.WhiteNoise;
+import org.terasology.engine.world.generation.Facet;
+import org.terasology.engine.world.generation.FacetBorder;
+import org.terasology.engine.world.generation.FacetProviderPlugin;
+import org.terasology.engine.world.generation.GeneratingRegion;
+import org.terasology.engine.world.generation.Requires;
+import org.terasology.engine.world.generation.Updates;
+import org.terasology.engine.world.generation.facets.SurfaceHeightFacet;
+import org.terasology.engine.world.generator.plugin.RegisterPlugin;
 import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.paradice.trees.GenericTrees;
-import org.terasology.utilities.procedural.Noise;
-import org.terasology.utilities.procedural.WhiteNoise;
-import org.terasology.world.generation.Facet;
-import org.terasology.world.generation.FacetBorder;
-import org.terasology.world.generation.FacetProviderPlugin;
-import org.terasology.world.generation.GeneratingRegion;
-import org.terasology.world.generation.Requires;
-import org.terasology.world.generation.Updates;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
-import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Requires({

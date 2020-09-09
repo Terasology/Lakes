@@ -1,39 +1,26 @@
-/*
- * Copyright 2016 MovingBlocks
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2020 The Terasology Foundation
+// SPDX-License-Identifier: Apache-2.0
 package org.terasology.Lakes;
 
-import org.terasology.core.world.CoreBiome;
-import org.terasology.core.world.generator.facets.BiomeFacet;
+import org.terasology.coreworlds.CoreBiome;
+import org.terasology.coreworlds.generator.facets.BiomeFacet;
+import org.terasology.engine.math.Region3i;
+import org.terasology.engine.utilities.procedural.Noise;
+import org.terasology.engine.utilities.procedural.WhiteNoise;
+import org.terasology.engine.world.generation.Border3D;
+import org.terasology.engine.world.generation.Facet;
+import org.terasology.engine.world.generation.FacetBorder;
+import org.terasology.engine.world.generation.FacetProviderPlugin;
+import org.terasology.engine.world.generation.GeneratingRegion;
+import org.terasology.engine.world.generation.Produces;
+import org.terasology.engine.world.generation.Requires;
+import org.terasology.engine.world.generation.facets.SurfaceHeightFacet;
+import org.terasology.engine.world.generation.facets.base.BaseFieldFacet2D;
+import org.terasology.engine.world.generator.plugin.RegisterPlugin;
 import org.terasology.gestalt.naming.Name;
-import org.terasology.math.Region3i;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector2i;
 import org.terasology.math.geom.Vector3i;
-import org.terasology.utilities.procedural.Noise;
-import org.terasology.utilities.procedural.WhiteNoise;
-import org.terasology.world.generation.Border3D;
-import org.terasology.world.generation.Facet;
-import org.terasology.world.generation.FacetBorder;
-import org.terasology.world.generation.FacetProviderPlugin;
-import org.terasology.world.generation.GeneratingRegion;
-import org.terasology.world.generation.Produces;
-import org.terasology.world.generation.Requires;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
-import org.terasology.world.generation.facets.base.BaseFieldFacet2D;
-import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Produces(LakeFacet.class)
@@ -93,7 +80,8 @@ public class LakeProvider implements FacetProviderPlugin {
                         ) > 0.9999
                         ) {
                             lakes.add(new Lake(pos, Lake.MIN_VERTICES +
-                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
+                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x()
+                                            , pos.z())))
                             ));
                         }
                     } else if (pos.y() == Math.round(sHeight) && checkGradient(pos,
@@ -101,7 +89,8 @@ public class LakeProvider implements FacetProviderPlugin {
                         // Surface Lakes
                         if (computeProbability(pos, biomeFacet) > 0.99) {
                             Lake temp = new Lake(pos, Lake.MIN_VERTICES +
-                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
+                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x()
+                                            , pos.z())))
                             );
                             if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
                                 int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
@@ -147,9 +136,7 @@ public class LakeProvider implements FacetProviderPlugin {
             float yDiff = Math.abs(facet.getWorld(pos.x(), pos.z() + 3) - facet.getWorld(pos.x(), pos.z() - 3));
             float xyDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z() + 3) - facet.getWorld(pos.x() - 3,
                     pos.z() - 3));
-            if (xDiff > 2 || yDiff > 2 || xyDiff > 2) {
-                return false;
-            } else return true;
+            return !(xDiff > 2) && !(yDiff > 2) && !(xyDiff > 2);
         }
 
         return false;
