@@ -6,13 +6,9 @@ package org.terasology.Lakes;
 import org.terasology.core.world.CoreBiome;
 import org.terasology.core.world.generator.facets.BiomeFacet;
 import org.terasology.core.world.generator.facets.TreeFacet;
-import org.terasology.core.world.generator.trees.TreeGenerator;
 import org.terasology.core.world.generator.trees.Trees;
-import org.terasology.math.TeraMath;
-import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.paradice.trees.GenericTrees;
-import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
 import org.terasology.world.generation.Facet;
 import org.terasology.world.generation.FacetBorder;
@@ -20,45 +16,46 @@ import org.terasology.world.generation.FacetProviderPlugin;
 import org.terasology.world.generation.GeneratingRegion;
 import org.terasology.world.generation.Requires;
 import org.terasology.world.generation.Updates;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
+import org.terasology.world.generation.facets.SurfacesFacet;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Requires({
-        @Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Trees.MAXRADIUS)),
-        @Facet(value = LakeFacet.class, border = @FacetBorder(sides = Trees.MAXRADIUS)),
-        @Facet(value = BiomeFacet.class, border = @FacetBorder(sides = Trees.MAXRADIUS))
+        @Facet(value = SurfacesFacet.class, border = @FacetBorder(sides = Trees.MAXRADIUS)),
+        @Facet(value = LakeFacet.class, border = @FacetBorder(sides = Trees.MAXRADIUS + LakeTreeProvider.SCATTER, bottom = 5)),
+        @Facet(value = BiomeFacet.class, border = @FacetBorder(sides = Trees.MAXRADIUS + LakeTreeProvider.SCATTER, bottom = 5))
 })
 @Updates(@Facet(TreeFacet.class))
 public class LakeTreeProvider implements FacetProviderPlugin {
-    private Noise noise;
+    public static final int SCATTER = 4;
+    private WhiteNoise noise;
 
     @Override
     public void process(GeneratingRegion region) {
         TreeFacet treeFacet = region.getRegionFacet(TreeFacet.class);
 
-        SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
-        Rect2i worldRegion = surfaceHeightFacet.getWorldRegion();
+        SurfacesFacet surfacesFacet = region.getRegionFacet(SurfacesFacet.class);
         LakeFacet lakeFacet = region.getRegionFacet(LakeFacet.class);
         BiomeFacet biomeFacet = region.getRegionFacet(BiomeFacet.class);
 
-        for (int wz = worldRegion.minY(); wz <= worldRegion.maxY(); wz++) {
-            for (int wx = worldRegion.minX(); wx <= worldRegion.maxX(); wx++) {
-                int surfaceHeight = TeraMath.floorToInt(surfaceHeightFacet.getWorld(wx, wz));
-                Vector3i pos = new Vector3i(wx, surfaceHeight, wz);
-                if (treeFacet.getWorldRegion().encompasses(pos)) {
-                    if (biomeFacet.getWorld(wx, wz).getId().equals(CoreBiome.DESERT.getId())) {
-
-                        Lake lake = lakeFacet.getNearestLake(pos);
-                        if (lake.isNotNull() && lake.getOrigin().y > surfaceHeight - 10
-                                && noise.noise(wx, wz) > 0.99
-                        ) {
-                            if (lake.OuterContains(pos)) {
-                                TreeGenerator tree = GenericTrees.palmTree();
-                                treeFacet.setWorld(wx, surfaceHeight, wz, tree);
-                            }
-                        }
-                    }
+        for (Lake lake : lakeFacet.getLakes()) {
+            for (Vector3i lakePos : lake) {
+                if (
+                    !biomeFacet.getWorldRegion().contains(lakePos.x, lakePos.z)
+                    || !biomeFacet.getWorld(lakePos.x, lakePos.z).getId().equals(CoreBiome.DESERT.getId())
+                    || noise.noise(lakePos.x, lakePos.y, lakePos.z) < 0.5
+                ) {
+                    continue;
+                }
+                Vector3i pos = new Vector3i(lakePos);
+                pos.addX(Math.floorMod(noise.intNoise(lakePos.x, lakePos.y + 1, lakePos.z), SCATTER * 2 + 1) - SCATTER);
+                pos.addY(Math.floorMod(noise.intNoise(lakePos.x, lakePos.y + 2, lakePos.z), SCATTER * 2 + 1) - SCATTER);
+                pos.addZ(Math.floorMod(noise.intNoise(lakePos.x, lakePos.y + 3, lakePos.z), SCATTER * 2 + 1) - SCATTER);
+                if (
+                    surfacesFacet.getWorldRegion().encompasses(pos.x, pos.y - 1, pos.z)
+                    && surfacesFacet.getWorld(pos.x, pos.y - 1, pos.z)
+                    && treeFacet.getWorldRegion().encompasses(pos)) {
+                    treeFacet.setWorld(pos, GenericTrees.palmTree());
                 }
             }
         }
