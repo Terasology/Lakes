@@ -57,7 +57,7 @@ import java.util.Set;
 })
 public class LakeProvider implements FacetProviderPlugin {
     private static final int SKIP_BLOCKS = 3;
-    private static final float SURFACE_FREQUENCY = 0.00015f;
+    private static final float SURFACE_FREQUENCY = 0.0003f;
     private static final float SURFACE_EFFECTIVE_FREQUENCY = SURFACE_FREQUENCY * SKIP_BLOCKS * SKIP_BLOCKS * SKIP_BLOCKS;
     private static final float UNDERGROUND_FREQUENCY = 0.000001f;
     private static final float UNDERGROUND_EFFECTIVE_FREQUENCY = UNDERGROUND_FREQUENCY * SKIP_BLOCKS * SKIP_BLOCKS * SKIP_BLOCKS;
@@ -140,7 +140,7 @@ public class LakeProvider implements FacetProviderPlugin {
             if (content.contains(pos)) {
                 continue;
             }
-            float lakeness = 1 + 0.7f * depthModifyingNoise.noise(pos.x, pos.y, pos.z)
+            float lakeness = 1 + 1.3f * depthModifyingNoise.noise(pos.x, pos.y, pos.z)
                 - square((pos.x - origin.x) / width)
                 - square((pos.y - origin.y) / depth)
                 - square((pos.z - origin.z) / width);
@@ -282,6 +282,6 @@ public class LakeProvider implements FacetProviderPlugin {
     }
 
     private int localDepth(Vector3i origin, Vector3i pos, float depth, float width) {
-        return (int) (depth * (0.7 * depthModifyingNoise.noise(pos.x, pos.y, pos.z) + 1 - square((pos.x - origin.x) / width) - square((pos.z - origin.z) / width)));
+        return (int) (depth * (1.3 * depthModifyingNoise.noise(pos.x, pos.y, pos.z) + 1 - square((pos.x - origin.x) / width) - square((pos.z - origin.z) / width)));
     }
 }
