@@ -45,6 +45,19 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
+
+/**
+ * Try to place lakes in random locations on the surface and underground.
+ * The depth of each lake is determined by a random noise field added to a random-width paraboloid.
+ * The points where the depth is <= 0 are where the lake stops.
+ * If the surface in that region is missing, or too steep, or under various other conditions,
+ * the provider gives up on generating that lake, and doesn't place it.
+ * 
+ * Underground lakes are generated similarly, but in 3D.
+ * If they breach the surface, they're cancelled.
+ * The upper part of their cave is filled with air.
+ * If they're sufficiently far underground, they're lava instead of water.
+ */
 @RegisterPlugin
 @Produces(LakeFacet.class)
 @Updates({
@@ -61,6 +74,8 @@ public class LakeProvider implements FacetProviderPlugin {
     private static final float SURFACE_EFFECTIVE_FREQUENCY = SURFACE_FREQUENCY * SKIP_BLOCKS * SKIP_BLOCKS * SKIP_BLOCKS;
     private static final float UNDERGROUND_FREQUENCY = 0.000001f;
     private static final float UNDERGROUND_EFFECTIVE_FREQUENCY = UNDERGROUND_FREQUENCY * SKIP_BLOCKS * SKIP_BLOCKS * SKIP_BLOCKS;
+    private static final float SURFACE_LAKE_IRREGULARITY = 1.3f;
+    private static final float UNDERGROUND_LAKE_IRREGULARITY = 1.3f;
 
     Block water;
     Block lava;
@@ -140,7 +155,7 @@ public class LakeProvider implements FacetProviderPlugin {
             if (content.contains(pos)) {
                 continue;
             }
-            float lakeness = 1 + 1.3f * depthModifyingNoise.noise(pos.x, pos.y, pos.z)
+            float lakeness = 1 + UNDERGROUND_LAKE_IRREGULARITY * depthModifyingNoise.noise(pos.x, pos.y, pos.z)
                 - square((pos.x - origin.x) / width)
                 - square((pos.y - origin.y) / depth)
                 - square((pos.z - origin.z) / width);
@@ -282,6 +297,6 @@ public class LakeProvider implements FacetProviderPlugin {
     }
 
     private int localDepth(Vector3i origin, Vector3i pos, float depth, float width) {
-        return (int) (depth * (1.3 * depthModifyingNoise.noise(pos.x, pos.y, pos.z) + 1 - square((pos.x - origin.x) / width) - square((pos.z - origin.z) / width)));
+        return (int) (depth * (SURFACE_LAKE_IRREGULARITY * depthModifyingNoise.noise(pos.x, pos.y, pos.z) + 1 - square((pos.x - origin.x) / width) - square((pos.z - origin.z) / width)));
     }
 }
