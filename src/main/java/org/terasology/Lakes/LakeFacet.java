@@ -28,8 +28,6 @@ import java.util.Set;
 public class LakeFacet extends BaseFacet3D {
 
     protected Set<Lake> lakes = new LinkedHashSet<>();
-    protected boolean enabled = true;
-    protected Lake NullLake = new Lake();
 
     public LakeFacet(Region3i targetRegion, Border3D border) {
         super(targetRegion, border);
@@ -47,34 +45,5 @@ public class LakeFacet extends BaseFacet3D {
      */
     public Set<Lake> getLakes() {
         return Collections.unmodifiableSet(lakes);
-    }
-
-    public Lake getNearestLake(Vector3i pos) {
-
-        if (lakes.isEmpty()) {
-            return NullLake;
-        }
-
-        Lake nearest = (Lake) lakes.toArray()[0];
-
-        double dis = Double.MAX_VALUE;
-
-        for (Lake lake : lakes) {
-            double newDis = pos.distanceSquared(lake.getOrigin());
-            if (dis > newDis) {
-                nearest = lake;
-                dis = newDis;
-            }
-        }
-
-        return nearest;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 }

@@ -15,15 +15,17 @@
  */
 package org.terasology.Lakes;
 
-import org.terasology.core.world.CoreBiome;
-import org.terasology.core.world.generator.facets.BiomeFacet;
-import org.terasology.math.Region3i;
-import org.terasology.math.geom.Rect2i;
-import org.terasology.math.geom.Vector2i;
+import org.terasology.math.JomlUtil;
+import org.terasology.math.geom.Vector3f;
 import org.terasology.math.geom.Vector3i;
-import org.terasology.naming.Name;
+import org.terasology.registry.CoreRegistry;
+import org.terasology.utilities.procedural.BrownianNoise;
 import org.terasology.utilities.procedural.Noise;
+import org.terasology.utilities.procedural.SimplexNoise;
+import org.terasology.utilities.procedural.SubSampledNoise;
 import org.terasology.utilities.procedural.WhiteNoise;
+import org.terasology.world.block.Block;
+import org.terasology.world.block.BlockManager;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.Facet;
 import org.terasology.world.generation.FacetBorder;
@@ -31,166 +33,270 @@ import org.terasology.world.generation.FacetProviderPlugin;
 import org.terasology.world.generation.GeneratingRegion;
 import org.terasology.world.generation.Produces;
 import org.terasology.world.generation.Requires;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
-import org.terasology.world.generation.facets.base.BaseFieldFacet2D;
+import org.terasology.world.generation.Updates;
+import org.terasology.world.generation.facets.DensityFacet;
+import org.terasology.world.generation.facets.ElevationFacet;
+import org.terasology.world.generation.facets.SeaLevelFacet;
+import org.terasology.world.generation.facets.SurfacesFacet;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.Set;
+
+
+/**
+ * Try to place lakes in random locations on the surface and underground.
+ * The depth of each lake is determined by a random noise field added to a random-width paraboloid.
+ * The points where the depth is <= 0 are where the lake stops.
+ * If the surface in that region is missing, or too steep, or under various other conditions,
+ * the provider gives up on generating that lake, and doesn't place it.
+ * 
+ * Underground lakes are generated similarly, but in 3D.
+ * If they breach the surface, they're cancelled.
+ * The upper part of their cave is filled with air.
+ * If they're sufficiently far underground, they're lava instead of water.
+ */
 @RegisterPlugin
 @Produces(LakeFacet.class)
+@Updates({
+        @Facet(value = SurfacesFacet.class, border = @FacetBorder(sides = Lake.MAX_RADIUS * 3, bottom = Lake.MAX_DEPTH + 3, top = Lake.MAX_DEPTH + 3)),
+        @Facet(value = DensityFacet.class, border = @FacetBorder(sides = Lake.MAX_RADIUS * 3, bottom = Lake.MAX_DEPTH + 3, top = Lake.MAX_DEPTH + 3))
+})
 @Requires({
-        @Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = (Lake.MAX_SIZE) * 2)),
-        @Facet(value = BiomeFacet.class, border = @FacetBorder(sides = (Lake.MAX_SIZE) * 2))
+    @Facet(value = ElevationFacet.class, border = @FacetBorder(sides = Lake.MAX_RADIUS * 2)),
+    @Facet(value = SeaLevelFacet.class)
 })
 public class LakeProvider implements FacetProviderPlugin {
     private static final int SKIP_BLOCKS = 3;
-    // Don't make any of these constants integer values, the noise functions returns only 0 or 1 for them
-    private static final float SURFACE_LAKES_SAMPLING_CONSTANT = 0.9f;
-    private static final float SURFACE_DESERT_LAKES_SAMPLING_CONSTANT = 0.3f;
-    private static final float UNDERGROUND_LAKES_SAMPLING_CONSTANT = 0.3f;
+    private static final float SURFACE_FREQUENCY = 0.0003f;
+    private static final float SURFACE_EFFECTIVE_FREQUENCY = SURFACE_FREQUENCY * SKIP_BLOCKS * SKIP_BLOCKS * SKIP_BLOCKS;
+    private static final float UNDERGROUND_FREQUENCY = 0.000001f;
+    private static final float UNDERGROUND_EFFECTIVE_FREQUENCY = UNDERGROUND_FREQUENCY * SKIP_BLOCKS * SKIP_BLOCKS * SKIP_BLOCKS;
+    private static final float SURFACE_LAKE_IRREGULARITY = 1.3f;
+    private static final float UNDERGROUND_LAKE_IRREGULARITY = 1.3f;
 
-    private Noise noise;
+    Block water;
+    Block lava;
+
+    private WhiteNoise noise;
+    private Noise depthModifyingNoise;
 
     @Override
     public void setSeed(long seed) {
         // to change the seed value
         noise = new WhiteNoise(seed * 3882);
+        depthModifyingNoise = new SubSampledNoise(new BrownianNoise(new SimplexNoise(seed * 3883), 2), new Vector3f(0.05f, 0.05f, 0.05f), 1);
+        BlockManager blockManager = CoreRegistry.get(BlockManager.class);
+        water = blockManager.getBlock("CoreAssets:Water");
+        lava = blockManager.getBlock("CoreAssets:Lava");
     }
 
     @Override
     public void process(GeneratingRegion region) {
-        SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
+        SurfacesFacet surfacesFacet = region.getRegionFacet(SurfacesFacet.class);
+        DensityFacet densityFacet = region.getRegionFacet(DensityFacet.class);
+        ElevationFacet elevationFacet = region.getRegionFacet(ElevationFacet.class);
+        SeaLevelFacet seaLevelFacet = region.getRegionFacet(SeaLevelFacet.class);
 
         Border3D border = region.getBorderForFacet(LakeFacet.class);
-        //Extend border by max radius + max length + max outer length and max lakedepth
-        border = border.extendBy(Lake.MAX_DEPTH, Lake.MAX_DEPTH, (Lake.MAX_SIZE));
-        LakeFacet lakes = new LakeFacet(region.getRegion(), border);
-        Region3i worldRegion = lakes.getWorldRegion();
-        BiomeFacet biomeFacet = region.getRegionFacet(BiomeFacet.class);
+        LakeFacet facet = new LakeFacet(region.getRegion(), border);
 
-        Vector3i min = worldRegion.min();
+        Vector3i min = facet.getWorldRegion().min();
         Vector3i start = new Vector3i(
-                (min.x() + (SKIP_BLOCKS - Math.floorMod(min.x(), SKIP_BLOCKS))),
-                min.y() + (SKIP_BLOCKS - Math.floorMod(min.y(), SKIP_BLOCKS)),
-                min.z() + (SKIP_BLOCKS - Math.floorMod(min.z(), SKIP_BLOCKS))
+                Math.floorDiv(min.x, SKIP_BLOCKS) * SKIP_BLOCKS,
+                Math.floorDiv(min.y, SKIP_BLOCKS) * SKIP_BLOCKS,
+                Math.floorDiv(min.z, SKIP_BLOCKS) * SKIP_BLOCKS
         );
 
-        for (int wy = start.y(); wy < worldRegion.maxY(); wy += SKIP_BLOCKS) {
-            for (int wx = start.x(); wx < worldRegion.maxX(); wx += SKIP_BLOCKS) {
-                for (int wz = start.z(); wz < worldRegion.maxZ(); wz += SKIP_BLOCKS) {
-                    // To any future onlooker, pos needs to be created a new Vector3i here or else the lakes
-                    // don't expand beyond one chunk for reasons unknown. Tried doing pos.set(wx, wy, wz)
-                    // and it didn't work - sin3point14
-                    Vector3i pos = new Vector3i(wx, wy, wz);
-                    float sHeight = surfaceHeightFacet.getWorld(pos.x(), pos.z());
-                    if (pos.y() < sHeight - 20) {
-                        // Underground Lakes
-                        // If the sampling constant(0.3) is changed also adjust the number of '9's in the comparison
-                        // same goes for other places noise has been sampled
-                        if (noise.noise(
-                                pos.x() * UNDERGROUND_LAKES_SAMPLING_CONSTANT,
-                                pos.y() * UNDERGROUND_LAKES_SAMPLING_CONSTANT,
-                                pos.z() * UNDERGROUND_LAKES_SAMPLING_CONSTANT
-                        ) > 0.9999
-                        ) {
-                            lakes.add(new Lake(pos, Lake.MIN_VERTICES +
-                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
-                            ));
+        for (int wx0 = start.x; wx0 <= facet.getWorldRegion().maxX(); wx0 += SKIP_BLOCKS) {
+            for (int wz0 = start.z; wz0 <= facet.getWorldRegion().maxZ(); wz0 += SKIP_BLOCKS) {
+                // underground lakes
+                for (int wy0 = start.y; wy0 <= facet.getWorldRegion().maxY(); wy0 += SKIP_BLOCKS) {
+                    if (Math.abs(noise.noise(wx0, wz0, wy0)) < UNDERGROUND_EFFECTIVE_FREQUENCY) {
+                        int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 1), SKIP_BLOCKS);
+                        int wy = wy0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 2), SKIP_BLOCKS);
+                        int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 3), SKIP_BLOCKS);
+                        if (!elevationFacet.getWorldRegion().contains(wx, wz) || !densityFacet.getWorldRegion().encompasses(wx, wy, wz)) {
+                            continue;
                         }
-                    } else if (pos.y() == Math.round(sHeight) && checkGradient(pos,
-                            surfaceHeightFacet)) {
-                        // Surface Lakes
-                        if (computeProbability(pos, biomeFacet) > 0.99) {
-                            Lake temp = new Lake(pos, Lake.MIN_VERTICES +
-                                    Math.round((Lake.MAX_VERTICES - Lake.MIN_VERTICES) * Math.abs(noise.noise(pos.x(), pos.z())))
-                            );
-                            if (checkCorners(temp.getBoundingBox(), surfaceHeightFacet)) {
-                                int minHeight = getMinimumHeight(temp.getBoundingBox(), surfaceHeightFacet);
-                                if (minHeight < pos.y()) {
-                                    temp.setWaterHeight(minHeight);
-                                }
-                                lakes.add(temp);
-                            }
+                        float depth = elevationFacet.getWorld(wx, wz) - wy;
+                        if (depth > 20 && densityFacet.getWorld(wx, wy, wz) > 0) {
+                            generateUndergroundLake(new Vector3i(wx, wy, wz), facet, densityFacet, depth);
                         }
+                    }
+                }
+
+                // surface lakes
+                int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wz0, 0), SKIP_BLOCKS);
+                int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wz0, 1), SKIP_BLOCKS);
+                if (!surfacesFacet.getWorldRegion().encompasses(wx, surfacesFacet.getWorldRegion().minY(), wz)) {
+                    continue;
+                }
+                for (int wy : surfacesFacet.getWorldColumn(wx, wz)) {
+                    if (Math.abs(noise.noise(wx, wy, wz)) < SURFACE_EFFECTIVE_FREQUENCY) {
+                        generateSurfaceLake(new Vector3i(wx, wy, wz), facet, surfacesFacet, densityFacet, seaLevelFacet.getSeaLevel());
                     }
                 }
             }
         }
-        region.setRegionFacet(LakeFacet.class, lakes);
+        region.setRegionFacet(LakeFacet.class, facet);
     }
 
-    private float computeProbability(Vector3i pos, BiomeFacet biomeFacet) {
-        float probability;
-        Name biomeID = biomeFacet.getWorld(pos.x(), pos.z()).getId();
-        if (biomeID.equals(CoreBiome.DESERT.getId())) {
-            probability = noise.noise(
-                    pos.x() * SURFACE_DESERT_LAKES_SAMPLING_CONSTANT,
-                    pos.y() * SURFACE_DESERT_LAKES_SAMPLING_CONSTANT,
-                    pos.z() * SURFACE_DESERT_LAKES_SAMPLING_CONSTANT
-            );
-        } else {
-            probability = noise.noise(
-                    pos.x() * SURFACE_LAKES_SAMPLING_CONSTANT,
-                    pos.y() * SURFACE_LAKES_SAMPLING_CONSTANT,
-                    pos.z() * SURFACE_LAKES_SAMPLING_CONSTANT
-            );
-
+    private void generateUndergroundLake(Vector3i origin, LakeFacet facet, DensityFacet densityFacet, float distanceBelowGround) {
+        float width = square(noise.noise(origin.x, origin.y, origin.z + 4)) * (Lake.MAX_RADIUS - 3) + 3;
+        float depth = Math.abs(noise.noise(origin.x, origin.y, origin.z + 5)) * (width / 2 - 2) + 2;
+        Set<Vector3i> content = new HashSet<>();
+        Queue<Vector3i> frontier = new ArrayDeque<>();
+        frontier.add(origin);
+        while (!frontier.isEmpty()) {
+            Vector3i pos = frontier.remove();
+            if (content.contains(pos)) {
+                continue;
+            }
+            float lakeness = 1 + UNDERGROUND_LAKE_IRREGULARITY * depthModifyingNoise.noise(pos.x, pos.y, pos.z)
+                - square((pos.x - origin.x) / width)
+                - square((pos.y - origin.y) / depth)
+                - square((pos.z - origin.z) / width);
+            if (lakeness > 0) {
+                if (!densityFacet.getWorldRegion().encompasses(pos) || densityFacet.getWorld(pos) <= 0) {
+                    // The lake breaches the surface. Abort.
+                    return;
+                }
+                content.add(pos);
+                frontier.add(Vector3i.north().add(pos));
+                frontier.add(Vector3i.south().add(pos));
+                frontier.add(Vector3i.east().add(pos));
+                frontier.add(Vector3i.west().add(pos));
+                frontier.add(Vector3i.up().add(pos));
+                frontier.add(Vector3i.down().add(pos));
+            }
         }
-        return probability;
+        facet.add(new Lake(origin.y, content, distanceBelowGround > 100 ? lava : water));
     }
 
-    protected boolean checkGradient(Vector3i pos, BaseFieldFacet2D facet) {
+    private void generateSurfaceLake(Vector3i origin, LakeFacet facet, SurfacesFacet surfaces, DensityFacet density, int seaLevel) {
+        if (origin.y < seaLevel) {
+            return;
+        }
+        float width = Math.abs(noise.noise(origin.x, origin.y, origin.z + 4)) * (Lake.MAX_RADIUS - Lake.MIN_RADIUS) + Lake.MIN_RADIUS;
+        float depth = Math.abs(noise.noise(origin.x, origin.y, origin.z + 5)) * (width / 2 - Lake.MIN_DEPTH) + Lake.MIN_DEPTH;
 
-        Rect2i boundingBox = Rect2i.createFromMinAndMax(pos.x() - 3, pos.z() - 3, pos.x() + 3, pos.z() + 3);
-
-        if (facet.getWorldRegion().contains(boundingBox)) {
-            float xDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z()) - facet.getWorld(pos.x() - 3, pos.z()));
-            float yDiff = Math.abs(facet.getWorld(pos.x(), pos.z() + 3) - facet.getWorld(pos.x(), pos.z() - 3));
-            float xyDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z() + 3) - facet.getWorld(pos.x() - 3,
-                    pos.z() - 3));
-            if (xDiff > 2 || yDiff > 2 || xyDiff > 2) {
-                return false;
-            } else return true;
+        // Generate the lake's 2D shape
+        Set<Vector3i> surface = new HashSet<>();
+        Set<Vector3i> shore = new HashSet<>();
+        Queue<Vector3i> frontier = new ArrayDeque<>();
+        frontier.add(origin);
+        while (!frontier.isEmpty()) {
+            Vector3i pos = frontier.remove();
+            if (surface.contains(pos)) {
+                continue;
+            }
+            if (!surfaces.getWorldRegion().encompasses(pos)) {
+                // Information important to the lake's construction is missing. Abort.
+                return;
+            }
+            if (localDepth(origin, pos, depth, width) <= 0) {
+                shore.add(pos);
+            } else {
+                surface.add(pos);
+                frontier.add(Vector3i.north().add(pos));
+                frontier.add(Vector3i.south().add(pos));
+                frontier.add(Vector3i.east().add(pos));
+                frontier.add(Vector3i.west().add(pos));
+            }
         }
 
-        return false;
-    }
+        if (surface.isEmpty()) {
+            // This lake contains no blocks.
+            return;
+        }
 
-    protected boolean checkCorners(Rect2i boundingBox, BaseFieldFacet2D facet) {
-        Vector2i max = boundingBox.max();
-        Vector2i min = boundingBox.min();
-        if (facet.getWorldRegion().contains(boundingBox)) {
-            float[] corners = new float[4];
-            corners[0] = facet.getWorld(max);
-            corners[1] = facet.getWorld(min);
-            corners[2] = facet.getWorld(min.x() + boundingBox.sizeX(), min.y());
-            corners[3] = facet.getWorld(min.x(), min.y() + boundingBox.sizeY());
-            for (int i = 0; i < corners.length; i++) {
-                for (int j = 0; j < corners.length; j++) {
-                    if (Math.abs(corners[i] - corners[j]) > 4) {
-                        return false;
-                    }
+        // Check that there are surfaces nearby (prevents lakes from overlapping with each other, or with caves).
+        for (Vector3i pos : surface) {
+            boolean hasSurface = false;
+            for (int surfaceHeight : surfaces.getWorldColumn(pos.x, pos.z)) {
+                if (surfaceHeight >= origin.y - 2 && surfaceHeight <= origin.y + 4) {
+                    hasSurface = true;
+                    break;
                 }
             }
-
+            if (!hasSurface) {
+                // There is no surface within range. Abort.
+                return;
+            }
         }
-        return true;
-    }
 
-    protected int getMinimumHeight(Rect2i boundingBox, BaseFieldFacet2D facet) {
-        boundingBox = facet.getWorldRegion().intersect(boundingBox);
-        Vector2i max = boundingBox.max();
-        Vector2i min = boundingBox.min();
+        // Calculate the height of the shore. The minimum height is used as the height of the lake surface.
         int minHeight = Integer.MAX_VALUE;
-        float[] corners = new float[4];
-        corners[0] = facet.getWorld(max);
-        corners[1] = facet.getWorld(min);
-        corners[2] = facet.getWorld(max.x(), min.y());
-        corners[3] = facet.getWorld(min.x(), max.y());
-        for (float corner : corners) {
-            if (corner < minHeight) {
-                minHeight = Math.round(corner);
+        int maxHeight = Integer.MIN_VALUE;
+        for (Vector3i pos : shore) {
+            boolean hasSurface = false;
+            for (int surfaceHeight : surfaces.getWorldColumn(pos.x, pos.z)) {
+                if (surfaceHeight >= origin.y - 2 && surfaceHeight <= origin.y + 4) {
+                    hasSurface = true;
+                    minHeight = Math.min(minHeight, surfaceHeight);
+                    maxHeight = Math.max(maxHeight, surfaceHeight);
+                    break;
+                }
+            }
+            if (!hasSurface) {
+                // There is no surface within range. Abort.
+                return;
             }
         }
-        return minHeight;
+
+        if (maxHeight - minHeight > 2 || minHeight <= seaLevel) {
+            // This area is too sloped or already underwater. Abort.
+            return;
+        }
+
+        // Carve out space for the lake, and calculate the set of all the blocks it contains.
+        Set<Vector3i> content = new HashSet<>();
+        for (Vector3i pos : surface) {
+            pos.y = minHeight - localDepth(origin, pos, depth, width); // The lake floor
+            if (!density.getWorldRegion().encompasses(pos) || !density.getWorldRegion().encompasses(pos.x, minHeight, pos.z)) {
+                return;
+            }
+            if (density.getWorld(pos) > 0) {
+                int surfaceHeight = surfaces.getNextAbove(JomlUtil.from(pos));
+                while (pos.y < surfaceHeight) {
+                    pos.addY(1);
+                    density.setWorld(pos, 0);
+                    if (pos.y <= minHeight) {
+                        content.add(new Vector3i(pos));
+                    }
+                }
+                surfaces.setWorld(JomlUtil.from(pos), false);
+            } else {
+                int surfaceHeight = surfaces.getNextBelow(JomlUtil.from(pos));
+                pos.setY(surfaceHeight + 1);
+                while (pos.y < minHeight) {
+                    content.add(new Vector3i(pos));
+                    pos.addY(1);
+                }
+                surfaces.setWorld(pos.x, surfaceHeight, pos.z, false);
+            }
+        }
+
+        for (Vector3i pos : shore) {
+            int surfaceHeight = surfaces.getNextAbove(new org.joml.Vector3i(pos.x, minHeight, pos.z));
+            if (surfaceHeight > minHeight) {
+                density.setWorld(pos.x, surfaceHeight, pos.z, 0);
+                surfaces.setWorld(pos.x, surfaceHeight, pos.z, false);
+                surfaces.setWorld(pos.x, surfaceHeight - 1, pos.z, true);
+            }
+        }
+
+        facet.add(new Lake(minHeight, content, water));
+    }
+
+    private float square(float x) {
+        return x * x;
+    }
+
+    private int localDepth(Vector3i origin, Vector3i pos, float depth, float width) {
+        return (int) (depth * (SURFACE_LAKE_IRREGULARITY * depthModifyingNoise.noise(pos.x, pos.y, pos.z) + 1 - square((pos.x - origin.x) / width) - square((pos.z - origin.z) / width)));
     }
 }
