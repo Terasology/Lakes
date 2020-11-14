@@ -28,7 +28,10 @@ import java.util.Set;
 
 public class Lake implements Iterable<Vector3i> {
     public static final int MAX_RADIUS = 15;
+    public static final float MIN_RADIUS = 5;
     public static final int MAX_DEPTH = 10;
+    public static final float MIN_DEPTH = 1.5f;
+    
 
     public final int surfaceHeight;
     public final Block liquid;

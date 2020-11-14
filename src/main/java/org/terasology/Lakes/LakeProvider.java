@@ -180,8 +180,8 @@ public class LakeProvider implements FacetProviderPlugin {
         if (origin.y < seaLevel) {
             return;
         }
-        float width = Math.abs(noise.noise(origin.x, origin.y, origin.z + 4)) * (Lake.MAX_RADIUS - 3) + 3;
-        float depth = Math.abs(noise.noise(origin.x, origin.y, origin.z + 5)) * (width / 2 - 0.8f) + 0.8f;
+        float width = Math.abs(noise.noise(origin.x, origin.y, origin.z + 4)) * (Lake.MAX_RADIUS - Lake.MIN_RADIUS) + Lake.MIN_RADIUS;
+        float depth = Math.abs(noise.noise(origin.x, origin.y, origin.z + 5)) * (width / 2 - Lake.MIN_DEPTH) + Lake.MIN_DEPTH;
 
         // Generate the lake's 2D shape
         Set<Vector3i> surface = new HashSet<>();
