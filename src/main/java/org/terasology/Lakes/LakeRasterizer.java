@@ -15,8 +15,8 @@
  */
 package org.terasology.Lakes;
 
+import org.joml.Vector3i;
 import org.terasology.math.ChunkMath;
-import org.terasology.math.geom.Vector3i;
 import org.terasology.registry.CoreRegistry;
 import org.terasology.world.block.Block;
 import org.terasology.world.block.BlockManager;
@@ -41,9 +41,9 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
 
         for (Lake lake : lakeFacet.getLakes()) {
             for (Vector3i pos : lake) {
-                if (chunkRegion.getRegion().encompasses(pos)) {
+                if (chunkRegion.getRegion().containsPoint(pos)) {
                     Block block = pos.y > lake.surfaceHeight ? air : lake.liquid;
-                    chunk.setBlock(ChunkMath.calcRelativeBlockPos(pos), block);
+                    chunk.setBlock(ChunkMath.calcRelativeBlockPos(pos, new Vector3i()), block);
                 }
             }
         }

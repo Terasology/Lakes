@@ -15,14 +15,9 @@
  */
 package org.terasology.Lakes;
 
-import org.terasology.math.geom.Rect2i;
-import org.terasology.math.geom.Vector3i;
-import org.terasology.utilities.procedural.Noise;
-import org.terasology.utilities.procedural.WhiteNoise;
+import org.joml.Vector3i;
 import org.terasology.world.block.Block;
 
-import java.awt.Polygon;
-import java.awt.Rectangle;
 import java.util.Iterator;
 import java.util.Set;
 
