@@ -1,6 +1,6 @@
 {
     "id": "Lakes",
-    "version": "2.0.0",
+    "version": "2.0.0-SNAPSHOT",
     "author": "The Terasology Foundation",
     "displayName": "Lakes",
     "description": "Plugin for world generation, which creates small lakes",
