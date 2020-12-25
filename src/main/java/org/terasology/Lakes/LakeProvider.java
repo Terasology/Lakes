@@ -17,7 +17,6 @@ package org.terasology.Lakes;
 
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-import org.terasology.math.JomlUtil;
 import org.terasology.registry.CoreRegistry;
 import org.terasology.utilities.procedural.BrownianNoise;
 import org.terasology.utilities.procedural.Noise;
@@ -110,15 +109,15 @@ public class LakeProvider implements FacetProviderPlugin {
                 Math.floorDiv(min.z, SKIP_BLOCKS) * SKIP_BLOCKS
         );
 
-        for (int wx0 = start.x; wx0 <= facet.getWorldRegion().getMaxX(); wx0 += SKIP_BLOCKS) {
-            for (int wz0 = start.z; wz0 <= facet.getWorldRegion().getMaxZ(); wz0 += SKIP_BLOCKS) {
+        for (int wx0 = start.x; wx0 <= facet.getWorldRegion().maxX(); wx0 += SKIP_BLOCKS) {
+            for (int wz0 = start.z; wz0 <= facet.getWorldRegion().maxZ(); wz0 += SKIP_BLOCKS) {
                 // underground lakes
-                for (int wy0 = start.y; wy0 <= facet.getWorldRegion().getMaxY(); wy0 += SKIP_BLOCKS) {
+                for (int wy0 = start.y; wy0 <= facet.getWorldRegion().maxY(); wy0 += SKIP_BLOCKS) {
                     if (Math.abs(noise.noise(wx0, wz0, wy0)) < UNDERGROUND_EFFECTIVE_FREQUENCY) {
                         int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 1), SKIP_BLOCKS);
                         int wy = wy0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 2), SKIP_BLOCKS);
                         int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 3), SKIP_BLOCKS);
-                        if (!elevationFacet.getWorldRegion().contains(wx, wz) || !densityFacet.getWorldRegion().containsPoint(wx, wy, wz)) {
+                        if (!elevationFacet.getWorldRegion().contains(wx, wz) || !densityFacet.getWorldRegion().contains(wx, wy, wz)) {
                             continue;
                         }
                         float depth = elevationFacet.getWorld(wx, wz) - wy;
@@ -131,7 +130,7 @@ public class LakeProvider implements FacetProviderPlugin {
                 // surface lakes
                 int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wz0, 0), SKIP_BLOCKS);
                 int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wz0, 1), SKIP_BLOCKS);
-                if (!surfacesFacet.getWorldRegion().containsBlock(wx, surfacesFacet.getWorldRegion().getMinY(), wz)) {
+                if (!surfacesFacet.getWorldRegion().contains(wx, surfacesFacet.getWorldRegion().minY(), wz)) {
                     continue;
                 }
                 for (int wy : surfacesFacet.getWorldColumn(wx, wz)) {
@@ -160,7 +159,7 @@ public class LakeProvider implements FacetProviderPlugin {
                 - square((pos.y - origin.y) / depth)
                 - square((pos.z - origin.z) / width);
             if (lakeness > 0) {
-                if (!densityFacet.getWorldRegion().containsPoint(pos) || densityFacet.getWorld(pos) <= 0) {
+                if (!densityFacet.getWorldRegion().contains(pos) || densityFacet.getWorld(pos) <= 0) {
                     // The lake breaches the surface. Abort.
                     return;
                 }
@@ -193,7 +192,7 @@ public class LakeProvider implements FacetProviderPlugin {
             if (surface.contains(pos)) {
                 continue;
             }
-            if (!surfaces.getWorldRegion().containsPoint(pos)) {
+            if (!surfaces.getWorldRegion().contains(pos)) {
                 // Information important to the lake's construction is missing. Abort.
                 return;
             }
@@ -256,7 +255,7 @@ public class LakeProvider implements FacetProviderPlugin {
         Set<Vector3i> content = new HashSet<>();
         for (Vector3i pos : surface) {
             pos.y = minHeight - localDepth(origin, pos, depth, width); // The lake floor
-            if (!density.getWorldRegion().containsPoint(pos) || !density.getWorldRegion().containsPoint(pos.x, minHeight, pos.z)) {
+            if (!density.getWorldRegion().contains(pos) || !density.getWorldRegion().contains(pos.x, minHeight, pos.z)) {
                 return;
             }
             if (density.getWorld(pos) > 0) {

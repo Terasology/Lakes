@@ -41,7 +41,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
 
         for (Lake lake : lakeFacet.getLakes()) {
             for (Vector3i pos : lake) {
-                if (chunkRegion.getRegion().containsPoint(pos)) {
+                if (chunkRegion.getRegion().contains(pos)) {
                     Block block = pos.y > lake.surfaceHeight ? air : lake.liquid;
                     chunk.setBlock(ChunkMath.calcRelativeBlockPos(pos, new Vector3i()), block);
                 }

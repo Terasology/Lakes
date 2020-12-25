@@ -52,9 +52,9 @@ public class LakeTreeProvider implements FacetProviderPlugin {
                 pos.add(0,Math.floorMod(noise.intNoise(lakePos.x, lakePos.y + 2, lakePos.z), SCATTER * 2 + 1) - SCATTER,0);
                 pos.add(0,0,Math.floorMod(noise.intNoise(lakePos.x, lakePos.y + 3, lakePos.z), SCATTER * 2 + 1) - SCATTER);
                 if (
-                    surfacesFacet.getWorldRegion().containsPoint(pos.x, pos.y - 1, pos.z)
+                    surfacesFacet.getWorldRegion().contains(pos.x, pos.y - 1, pos.z)
                     && surfacesFacet.getWorld(pos.x, pos.y - 1, pos.z)
-                    && treeFacet.getWorldRegion().containsPoint(pos)) {
+                    && treeFacet.getWorldRegion().contains(pos)) {
                     treeFacet.setWorld(pos, GenericTrees.palmTree());
                 }
             }
