@@ -15,8 +15,7 @@
  */
 package org.terasology.Lakes;
 
-import org.terasology.math.Region3i;
-import org.terasology.math.geom.Vector3i;
+import org.terasology.world.block.BlockRegion;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.facets.base.BaseFacet3D;
 
@@ -29,7 +28,7 @@ public class LakeFacet extends BaseFacet3D {
 
     protected Set<Lake> lakes = new LinkedHashSet<>();
 
-    public LakeFacet(Region3i targetRegion, Border3D border) {
+    public LakeFacet(BlockRegion targetRegion, Border3D border) {
         super(targetRegion, border);
     }
 

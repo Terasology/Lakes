@@ -15,9 +15,9 @@
  */
 package org.terasology.Lakes;
 
-import org.terasology.math.JomlUtil;
-import org.terasology.math.geom.Vector3f;
-import org.terasology.math.geom.Vector3i;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
+import org.terasology.math.Direction;
 import org.terasology.registry.CoreRegistry;
 import org.terasology.utilities.procedural.BrownianNoise;
 import org.terasology.utilities.procedural.Noise;
@@ -103,7 +103,7 @@ public class LakeProvider implements FacetProviderPlugin {
         Border3D border = region.getBorderForFacet(LakeFacet.class);
         LakeFacet facet = new LakeFacet(region.getRegion(), border);
 
-        Vector3i min = facet.getWorldRegion().min();
+        Vector3i min = facet.getWorldRegion().getMin(new Vector3i());
         Vector3i start = new Vector3i(
                 Math.floorDiv(min.x, SKIP_BLOCKS) * SKIP_BLOCKS,
                 Math.floorDiv(min.y, SKIP_BLOCKS) * SKIP_BLOCKS,
@@ -118,7 +118,7 @@ public class LakeProvider implements FacetProviderPlugin {
                         int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 1), SKIP_BLOCKS);
                         int wy = wy0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 2), SKIP_BLOCKS);
                         int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 3), SKIP_BLOCKS);
-                        if (!elevationFacet.getWorldRegion().contains(wx, wz) || !densityFacet.getWorldRegion().encompasses(wx, wy, wz)) {
+                        if (!elevationFacet.getWorldRegion().contains(wx, wz) || !densityFacet.getWorldRegion().contains(wx, wy, wz)) {
                             continue;
                         }
                         float depth = elevationFacet.getWorld(wx, wz) - wy;
@@ -131,7 +131,7 @@ public class LakeProvider implements FacetProviderPlugin {
                 // surface lakes
                 int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wz0, 0), SKIP_BLOCKS);
                 int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wz0, 1), SKIP_BLOCKS);
-                if (!surfacesFacet.getWorldRegion().encompasses(wx, surfacesFacet.getWorldRegion().minY(), wz)) {
+                if (!surfacesFacet.getWorldRegion().contains(wx, surfacesFacet.getWorldRegion().minY(), wz)) {
                     continue;
                 }
                 for (int wy : surfacesFacet.getWorldColumn(wx, wz)) {
@@ -160,17 +160,17 @@ public class LakeProvider implements FacetProviderPlugin {
                 - square((pos.y - origin.y) / depth)
                 - square((pos.z - origin.z) / width);
             if (lakeness > 0) {
-                if (!densityFacet.getWorldRegion().encompasses(pos) || densityFacet.getWorld(pos) <= 0) {
+                if (!densityFacet.getWorldRegion().contains(pos) || densityFacet.getWorld(pos) <= 0) {
                     // The lake breaches the surface. Abort.
                     return;
                 }
                 content.add(pos);
-                frontier.add(Vector3i.north().add(pos));
-                frontier.add(Vector3i.south().add(pos));
-                frontier.add(Vector3i.east().add(pos));
-                frontier.add(Vector3i.west().add(pos));
-                frontier.add(Vector3i.up().add(pos));
-                frontier.add(Vector3i.down().add(pos));
+                frontier.add(Direction.FORWARD.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.BACKWARD.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.LEFT.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.RIGHT.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.UP.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.DOWN.asVector3i().add(pos, new Vector3i()));
             }
         }
         facet.add(new Lake(origin.y, content, distanceBelowGround > 100 ? lava : water));
@@ -193,7 +193,7 @@ public class LakeProvider implements FacetProviderPlugin {
             if (surface.contains(pos)) {
                 continue;
             }
-            if (!surfaces.getWorldRegion().encompasses(pos)) {
+            if (!surfaces.getWorldRegion().contains(pos)) {
                 // Information important to the lake's construction is missing. Abort.
                 return;
             }
@@ -201,10 +201,10 @@ public class LakeProvider implements FacetProviderPlugin {
                 shore.add(pos);
             } else {
                 surface.add(pos);
-                frontier.add(Vector3i.north().add(pos));
-                frontier.add(Vector3i.south().add(pos));
-                frontier.add(Vector3i.east().add(pos));
-                frontier.add(Vector3i.west().add(pos));
+                frontier.add(new Vector3i(0,0,1).add(pos));
+                frontier.add(new Vector3i(0,0,-1).add(pos));
+                frontier.add(new Vector3i(1,0,0).add(pos));
+                frontier.add(new Vector3i(-1,0,0).add(pos));
             }
         }
 
@@ -256,25 +256,25 @@ public class LakeProvider implements FacetProviderPlugin {
         Set<Vector3i> content = new HashSet<>();
         for (Vector3i pos : surface) {
             pos.y = minHeight - localDepth(origin, pos, depth, width); // The lake floor
-            if (!density.getWorldRegion().encompasses(pos) || !density.getWorldRegion().encompasses(pos.x, minHeight, pos.z)) {
+            if (!density.getWorldRegion().contains(pos) || !density.getWorldRegion().contains(pos.x, minHeight, pos.z)) {
                 return;
             }
             if (density.getWorld(pos) > 0) {
-                int surfaceHeight = surfaces.getNextAbove(JomlUtil.from(pos));
+                int surfaceHeight = surfaces.getNextAbove(pos);
                 while (pos.y < surfaceHeight) {
-                    pos.addY(1);
+                    pos.add(0,1,0);
                     density.setWorld(pos, 0);
                     if (pos.y <= minHeight) {
                         content.add(new Vector3i(pos));
                     }
                 }
-                surfaces.setWorld(JomlUtil.from(pos), false);
+                surfaces.setWorld(pos, false);
             } else {
-                int surfaceHeight = surfaces.getNextBelow(JomlUtil.from(pos));
-                pos.setY(surfaceHeight + 1);
+                int surfaceHeight = surfaces.getNextBelow(pos);
+                pos.set(0,surfaceHeight + 1,0);
                 while (pos.y < minHeight) {
                     content.add(new Vector3i(pos));
-                    pos.addY(1);
+                    pos.add(0,1,0);
                 }
                 surfaces.setWorld(pos.x, surfaceHeight, pos.z, false);
             }
