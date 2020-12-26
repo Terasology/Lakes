@@ -17,6 +17,7 @@ package org.terasology.Lakes;
 
 import org.joml.Vector3f;
 import org.joml.Vector3i;
+import org.terasology.math.Direction;
 import org.terasology.registry.CoreRegistry;
 import org.terasology.utilities.procedural.BrownianNoise;
 import org.terasology.utilities.procedural.Noise;
@@ -164,12 +165,12 @@ public class LakeProvider implements FacetProviderPlugin {
                     return;
                 }
                 content.add(pos);
-                frontier.add(new Vector3i(0,0,1).add(pos));
-                frontier.add(new Vector3i(0,0,-1).add(pos));
-                frontier.add(new Vector3i(1,0,0).add(pos));
-                frontier.add(new Vector3i(-1,0,0).add(pos));
-                frontier.add(new Vector3i(0,1,0).add(pos));
-                frontier.add(new Vector3i(0,-1,0).add(pos));
+                frontier.add(Direction.FORWARD.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.BACKWARD.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.LEFT.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.RIGHT.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.UP.asVector3i().add(pos, new Vector3i()));
+                frontier.add(Direction.DOWN.asVector3i().add(pos, new Vector3i()));
             }
         }
         facet.add(new Lake(origin.y, content, distanceBelowGround > 100 ? lava : water));
