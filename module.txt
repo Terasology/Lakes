@@ -6,7 +6,7 @@
     "description": "Plugin for world generation, which creates small lakes",
     "dependencies": [
         { "id": "CoreAssets", "minVersion": "2.0.1" },
-        { "id": "CoreWorlds", "minVersion": "1.1.0", "minVersion": "3.0.0" },
+        { "id": "CoreWorlds", "minVersion": "1.1.0", "maxVersion": "3.0.0" },
         { "id": "BiomesAPI", "minVersion": "4.0.0" },
         { "id": "ParadIce", "minVersion": "0.1.0-SNAPSHOT" }
     ],
