@@ -41,7 +41,7 @@ public class LakeTreeProvider implements FacetProviderPlugin {
         for (Lake lake : lakeFacet.getLakes()) {
             for (Vector3i lakePos : lake) {
                 if (
-                    !biomeFacet.getWorldRegion().contains(lakePos.x, lakePos.z)
+                    !biomeFacet.getWorldArea().contains(lakePos.x, lakePos.z)
                     || !biomeFacet.getWorld(lakePos.x, lakePos.z).getId().equals(CoreBiome.DESERT.getId())
                     || noise.noise(lakePos.x, lakePos.y, lakePos.z) < 0.5
                 ) {

@@ -52,7 +52,7 @@ import java.util.Set;
  * The points where the depth is <= 0 are where the lake stops.
  * If the surface in that region is missing, or too steep, or under various other conditions,
  * the provider gives up on generating that lake, and doesn't place it.
- * 
+ *
  * Underground lakes are generated similarly, but in 3D.
  * If they breach the surface, they're cancelled.
  * The upper part of their cave is filled with air.
@@ -118,7 +118,7 @@ public class LakeProvider implements FacetProviderPlugin {
                         int wx = wx0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 1), SKIP_BLOCKS);
                         int wy = wy0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 2), SKIP_BLOCKS);
                         int wz = wz0 + Math.floorMod(noise.intNoise(wx0, wy0, wz0 + 3), SKIP_BLOCKS);
-                        if (!elevationFacet.getWorldRegion().contains(wx, wz) || !densityFacet.getWorldRegion().contains(wx, wy, wz)) {
+                        if (!elevationFacet.getWorldArea().contains(wx, wz) || !densityFacet.getWorldRegion().contains(wx, wy, wz)) {
                             continue;
                         }
                         float depth = elevationFacet.getWorld(wx, wz) - wy;
