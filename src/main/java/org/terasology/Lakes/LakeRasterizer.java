@@ -16,10 +16,10 @@
 package org.terasology.Lakes;
 
 import org.joml.Vector3i;
-import org.terasology.math.ChunkMath;
 import org.terasology.registry.CoreRegistry;
 import org.terasology.world.block.Block;
 import org.terasology.world.block.BlockManager;
+import org.terasology.world.chunks.Chunks;
 import org.terasology.world.chunks.CoreChunk;
 import org.terasology.world.generation.Region;
 import org.terasology.world.generation.WorldRasterizerPlugin;
@@ -43,7 +43,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
             for (Vector3i pos : lake) {
                 if (chunkRegion.getRegion().contains(pos)) {
                     Block block = pos.y > lake.surfaceHeight ? air : lake.liquid;
-                    chunk.setBlock(ChunkMath.calcRelativeBlockPos(pos, tempPos), block);
+                    chunk.setBlock(Chunks.toRelative(pos, tempPos), block);
                 }
             }
         }
