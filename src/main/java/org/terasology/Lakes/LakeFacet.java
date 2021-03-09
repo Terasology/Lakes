@@ -15,9 +15,9 @@
  */
 package org.terasology.Lakes;
 
-import org.terasology.world.block.BlockRegion;
-import org.terasology.world.generation.Border3D;
-import org.terasology.world.generation.facets.base.BaseFacet3D;
+import org.terasology.engine.world.block.BlockRegion;
+import org.terasology.engine.world.generation.Border3D;
+import org.terasology.engine.world.generation.facets.base.BaseFacet3D;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;

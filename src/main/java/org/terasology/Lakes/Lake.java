@@ -16,7 +16,7 @@
 package org.terasology.Lakes;
 
 import org.joml.Vector3i;
-import org.terasology.world.block.Block;
+import org.terasology.engine.world.block.Block;
 
 import java.util.Iterator;
 import java.util.Set;
