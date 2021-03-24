@@ -19,8 +19,8 @@ import org.joml.Vector3i;
 import org.terasology.engine.registry.CoreRegistry;
 import org.terasology.engine.world.block.Block;
 import org.terasology.engine.world.block.BlockManager;
+import org.terasology.engine.world.chunks.Chunk;
 import org.terasology.engine.world.chunks.Chunks;
-import org.terasology.engine.world.chunks.CoreChunk;
 import org.terasology.engine.world.generation.Region;
 import org.terasology.engine.world.generation.WorldRasterizerPlugin;
 import org.terasology.engine.world.generator.plugin.RegisterPlugin;
@@ -36,7 +36,7 @@ public class LakeRasterizer implements WorldRasterizerPlugin {
     }
 
     @Override
-    public void generateChunk(CoreChunk chunk, Region chunkRegion) {
+    public void generateChunk(Chunk chunk, Region chunkRegion) {
         LakeFacet lakeFacet = chunkRegion.getFacet(LakeFacet.class);
         Vector3i tempPos = new Vector3i();
         for (Lake lake : lakeFacet.getLakes()) {
